@@ -166,7 +166,7 @@
             carouselView.innerHTML = `
                 <div class="carousel-product" role="region" aria-label="Producto en carrusel: ${product.nombre}">
                     <div class="carousel-product-image">
-                        <img src="${product.imagen}" alt="${product.nombre}" loading="lazy">
+                        <img src="${product.imagen}" alt="${product.nombre}" loading="lazy" onerror="this.style.display='none'">
                     </div>
                     <div class="carousel-product-info">
                         <h3>${product.nombre}</h3>
@@ -256,6 +256,8 @@
                 STATE.currentCarouselIndex = (STATE.currentCarouselIndex + 1) % STATE.products.length;
                 this.renderizar();
             }, CONFIG.CAROUSEL_INTERVAL);
+            
+            console.log('⏱️ Carrusel automático iniciado');
         },
 
         /**
