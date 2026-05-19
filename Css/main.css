@@ -127,6 +127,33 @@ body {
     font-size: 0.9rem;
 }
 
+.brand-logo-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.brand-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    object-fit: contain;
+    transition: transform var(--transition-base);
+    flex-shrink: 0;
+}
+
+.brand-logo:hover {
+    transform: scale(1.05);
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
 .main-nav {
     display: flex;
     gap: 0.6rem;
