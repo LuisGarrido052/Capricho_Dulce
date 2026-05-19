@@ -1,410 +1,300 @@
 "use strict";
 
-(function initApp() {
-    const pokemonSlides = [
-        // Pikachu - Pokemon electrico clasico
+(function bakeryApp() {
+    // Datos: arreglo de objetos para productos
+    const products = [
         {
-            id: 25,
-            name: "Pikachu",
-            type: "Electrico",
-            image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
-            note: "Icono clasico y veloz del universo Pokemon."
+            id: "p1",
+            name: "Tarta Red Velvet",
+            image: "https://images.unsplash.com/photo-1542831371-d531d36971e6?w=1200&q=80",
+            alt: "Tarta Red Velvet",
+            description: "Capas suaves de red velvet con relleno de crema de queso."
         },
         {
-            id: 6,
-            name: "Charizard",
-            type: "Fuego / Volador",
-            image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png",
-            note: "Potencia ofensiva alta y gran presencia visual."
+            id: "p2",
+            name: "Alfajores Caseros",
+            image: "https://images.unsplash.com/photo-1602080759127-9b6b8b7f7a63?w=1200&q=80",
+            alt: "Alfajores",
+            description: "Dulces alfajores rellenos de dulce de leche artesanal."
         },
         {
-            id: 9,
-            name: "Blastoise",
-            type: "Agua",
-            image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/9.png",
-            note: "Defensa fuerte con gran equilibrio tactico."
+            id: "p3",
+            name: "Cheesecake de Frutos Rojos",
+            image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=1200&q=80",
+            alt: "Cheesecake",
+            description: "Base crocante y crema suave cubierta con frutos rojos."
         },
         {
-            id: 3,
-            name: "Venusaur",
-            type: "Planta / Veneno",
-            image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/3.png",
-            note: "Control de campo y resistencia sostenida."
-        },
-        {
-            id: 150,
-            name: "Mewtwo",
-            type: "Psiquico",
-            image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
-            note: "Pokemon legendario con enfoque en poder mental."
+            id: "p4",
+            name: "Torta de Chocolate",
+            image: "https://images.unsplash.com/photo-1601972592248-2c9cfedb4f2f?w=1200&q=80",
+            alt: "Torta de chocolate",
+            description: "Intenso bizcocho de chocolate con ganache brillante."
         }
     ];
 
-    // ESTADO GLOBAL - Almacena el indice actual del carrusel y registros de formularios
     const appState = {
-        currentSlide: 0,  // Indice del Pokemon actual (0-4)
+        currentIndex: 0,
         submissions: {
-            register: [],          // Array de usuarios registrados
-            loginAttempts: [],     // Array de intentos de login
-            contacts: []           // Array de mensajes de contacto
-        }
+            register: [],
+            login: [],
+            contact: []
+        },
+        carouselIntervalId: null
     };
 
+    // DOM references
     const dom = {
-        image: document.getElementById("pokemon-image"),
-        name: document.getElementById("pokemon-name"),
-        meta: document.getElementById("pokemon-meta"),
-        indicators: document.getElementById("slider-indicators"),
-        prevBtn: document.getElementById("prev-slide"),
-        nextBtn: document.getElementById("next-slide"),
-        shuffleBtn: document.getElementById("shuffle-slide"),
+        carouselView: document.getElementById("carousel-view"),
+        indicators: document.getElementById("carousel-indicators"),
+        prevBtn: document.getElementById("prev"),
+        nextBtn: document.getElementById("next"),
+        productList: document.getElementById("product-list"),
         activityLog: document.getElementById("activity-log"),
         registerForm: document.getElementById("register-form"),
         loginForm: document.getElementById("login-form"),
-        contactForm: document.getElementById("contact-form"),
-        dittoImg: document.getElementById("dittoImg"),
-        dittoName: document.getElementById("dittoName"),
-        dittoInfo: document.getElementById("dittoInfo"),
-        dittoAbilities: document.getElementById("dittoAbilities"),
-        dittoFlavor: document.getElementById("dittoFlavor"),
-        headerDittoImg: document.getElementById("headerDittoImg")  // Logo Ditto en header
+        contactForm: document.getElementById("contact-form")
     };
 
-    function capitalize(value) {
-        const text = String(value ?? "");
-        return text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
+    // ---------------- Helpers ----------------
+    function qs(sel) { return document.querySelector(sel); }
+    function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
+
+    function sanitize(text) {
+        return String(text ?? "").replace(/[<>]/g, "");
     }
 
-    function safeText(value) {
-        return String(value ?? "").replace(/[<>]/g, "").trim();
+    function isValidEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+        return re.test(String(email).toLowerCase());
     }
 
-    function normalizeSpace(value) {
-        return safeText(value).replace(/\s+/g, " ");
+    function isStrongPassword(pwd) {
+        if (!pwd || pwd.length < 8) return false;
+        const upper = /[A-Z]/.test(pwd);
+        const lower = /[a-z]/.test(pwd);
+        const digit = /\d/.test(pwd);
+        const special = /[!@#\$%\^&\*]/.test(pwd);
+        return upper && lower && digit && special;
     }
 
-    function isValidEmail(value) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-        return emailRegex.test(value);
-    }
-
-    function isStrongPassword(value) {
-        const hasUpper = /[A-Z]/.test(value);
-        const hasLower = /[a-z]/.test(value);
-        const hasDigit = /\d/.test(value);
-        return value.length >= 8 && hasUpper && hasLower && hasDigit;
-    }
-
-    function setFieldError(input, message) {
-        const errorNode = document.querySelector('[data-error-for="' + input.id + '"]');
-        input.classList.add("is-invalid");
-        input.setAttribute("aria-invalid", "true");
-        if (errorNode) {
-            errorNode.textContent = message;
-        }
+    function setFieldError(input, msg) {
+        const err = document.querySelector('[data-error-for="' + input.id + '"]');
+        input.classList.add('is-invalid');
+        input.setAttribute('aria-invalid', 'true');
+        if (err) err.textContent = msg;
     }
 
     function clearFieldError(input) {
-        const errorNode = document.querySelector('[data-error-for="' + input.id + '"]');
-        input.classList.remove("is-invalid");
-        input.removeAttribute("aria-invalid");
-        if (errorNode) {
-            errorNode.textContent = "";
+        const err = document.querySelector('[data-error-for="' + input.id + '"]');
+        input.classList.remove('is-invalid');
+        input.removeAttribute('aria-invalid');
+        if (err) err.textContent = '';
+    }
+
+    function updateActivityLog() {
+        const r = appState.submissions.register.length;
+        const l = appState.submissions.login.length;
+        const c = appState.submissions.contact.length;
+        dom.activityLog.textContent = `Registros: ${r} | Logins: ${l} | Contactos: ${c}`;
+    }
+
+    // ---------------- Carousel (modifica DOM) ----------------
+    function buildCarousel() {
+        dom.indicators.innerHTML = '';
+        products.forEach((p, i) => {
+            const li = document.createElement('li');
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.setAttribute('aria-label', 'Ir a ' + p.name);
+            btn.dataset.index = String(i);
+            btn.addEventListener('click', () => goTo(i));
+            li.appendChild(btn);
+            dom.indicators.appendChild(li);
+        });
+        renderCarousel();
+    }
+
+    function renderCarousel() {
+        const p = products[appState.currentIndex];
+        // limpiar vista y crear nodos (evitar innerHTML con contenido de usuario)
+        dom.carouselView.innerHTML = '';
+        const fig = document.createElement('figure');
+        const img = document.createElement('img');
+        img.src = p.image;
+        img.alt = p.alt;
+        img.loading = 'lazy';
+        fig.appendChild(img);
+
+        const cap = document.createElement('figcaption');
+        const h3 = document.createElement('h3');
+        h3.textContent = p.name;
+        const pdesc = document.createElement('p');
+        pdesc.textContent = p.description;
+        cap.appendChild(h3);
+        cap.appendChild(pdesc);
+        fig.appendChild(cap);
+        dom.carouselView.appendChild(fig);
+
+        // indicators state
+        qsa('#carousel-indicators button').forEach((b, idx) => {
+            b.setAttribute('aria-current', idx === appState.currentIndex ? 'true' : 'false');
+        });
+    }
+
+    function prev() { goTo(appState.currentIndex - 1); }
+    function next() { goTo(appState.currentIndex + 1); }
+
+    function goTo(index) {
+        const max = products.length - 1;
+        if (index < 0) index = max;
+        if (index > max) index = 0;
+        appState.currentIndex = index;
+        renderCarousel();
+        renderProductList();
+    }
+
+    function startAutoRotate() {
+        stopAutoRotate();
+        appState.carouselIntervalId = setInterval(() => {
+            next();
+        }, 5000);
+    }
+
+    function stopAutoRotate() {
+        if (appState.carouselIntervalId) {
+            clearInterval(appState.carouselIntervalId);
+            appState.carouselIntervalId = null;
         }
     }
 
-    // === CAROUSEL LOGIC ===
-    // Construye los botones indicadores para cada Pokemon
-    // Permite seleccionar directamente un Pokemon del carrusel
-    function buildIndicators() {
-        dom.indicators.innerHTML = "";
-
-        pokemonSlides.forEach(function buildIndicator(slide, index) {
-            const item = document.createElement("li");
-            const button = document.createElement("button");
-            button.type = "button";
-            button.textContent = String(index + 1);
-            button.dataset.slideIndex = String(index);
-            button.setAttribute("aria-label", "Ver " + slide.name);
-            button.addEventListener("click", function onIndicatorClick() {
-                goToSlide(index);
+    // ---------------- Product list rendering ----------------
+    function renderProductList() {
+        dom.productList.innerHTML = '';
+        products.forEach((p, idx) => {
+            const card = document.createElement('article');
+            card.className = 'product-card';
+            const img = document.createElement('img');
+            img.src = p.image;
+            img.alt = p.alt;
+            const h4 = document.createElement('h4');
+            h4.textContent = p.name;
+            const pd = document.createElement('p');
+            pd.textContent = p.description;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = 'Ver en carrusel';
+            btn.addEventListener('click', () => {
+                goTo(idx);
+                // move focus to carousel for accessibility
+                dom.carouselView.focus();
             });
-            item.appendChild(button);
-            dom.indicators.appendChild(item);
+
+            card.appendChild(img);
+            card.appendChild(h4);
+            card.appendChild(pd);
+            card.appendChild(btn);
+            dom.productList.appendChild(card);
         });
     }
 
-    // Renderiza la diapositiva actual del carrusel
-    // Actualiza imagen, nombre, tipo del Pokemon
-    function renderSlide() {
-        const slide = pokemonSlides[appState.currentSlide];
-
-        dom.image.src = slide.image;
-        dom.image.alt = "Carta de " + slide.name;
-        dom.image.setAttribute("data-pokemon-id", String(slide.id));
-
-        dom.name.textContent = slide.name;
-        dom.meta.textContent = "Tipo: " + slide.type + " | " + slide.note;
-
-        const indicatorButtons = dom.indicators.querySelectorAll("button");
-        indicatorButtons.forEach(function updateIndicator(button, index) {
-            const isActive = index === appState.currentSlide;
-            button.setAttribute("aria-selected", String(isActive));
-            button.setAttribute("aria-current", isActive ? "true" : "false");
-        });
-    }
-
-    function goToSlide(index) {
-        const max = pokemonSlides.length - 1;
-        if (index < 0) {
-            appState.currentSlide = max;
-        } else if (index > max) {
-            appState.currentSlide = 0;
-        } else {
-            appState.currentSlide = index;
-        }
-        renderSlide();
-    }
-
-    function setupCarouselEvents() {
-        dom.prevBtn.addEventListener("click", function onPrev() {
-            goToSlide(appState.currentSlide - 1);
-        });
-
-        dom.nextBtn.addEventListener("click", function onNext() {
-            goToSlide(appState.currentSlide + 1);
-        });
-
-        dom.shuffleBtn.addEventListener("click", function onShuffle() {
-            const nextIndex = Math.floor(Math.random() * pokemonSlides.length);
-            goToSlide(nextIndex);
-        });
-    }
-
-    function addSubmissionRecord(type, payload) {
-        appState.submissions[type].push(payload);
-
-        const registerCount = appState.submissions.register.length;
-        const loginCount = appState.submissions.loginAttempts.length;
-        const contactCount = appState.submissions.contacts.length;
-
-        if (dom.activityLog) {
-            dom.activityLog.textContent =
-                "Registros: " + registerCount +
-                " | Logins: " + loginCount +
-                " | Contactos: " + contactCount;
-        }
-    }
-
-    function getFormValues(form, fields) {
-        return fields.reduce(function collect(acc, field) {
-            const sourceValue = form.elements[field] ? form.elements[field].value : "";
-            acc[field] = normalizeSpace(sourceValue);
+    // ---------------- Form validation and handlers ----------------
+    function getValues(form, names) {
+        return names.reduce((acc, n) => {
+            const el = form.elements[n];
+            acc[n] = el ? sanitize(el.value) : '';
             return acc;
         }, {});
     }
 
-    // FORM VALIDATION FUNCTIONS
-    // Valida formulario de REGISTRO: nombre (3+), email valido, password fuerte
     function validateRegister(values, form) {
-        let isValid = true;
+        let ok = true;
+        const name = form.elements.fullName || form.elements['fullName'] || form.elements['fullName'];
+        const email = form.elements.email || form.elements['email'];
+        const pwd = form.elements.password || form.elements['password'];
+        // map to our ids
+        const nameEl = form.querySelector('#reg-name');
+        const emailEl = form.querySelector('#reg-email');
+        const pwdEl = form.querySelector('#reg-password');
+        clearFieldError(nameEl); clearFieldError(emailEl); clearFieldError(pwdEl);
 
-        const nameInput = form.elements.fullName;
-        const emailInput = form.elements.email;
-        const passwordInput = form.elements.password;
-
-        clearFieldError(nameInput);
-        clearFieldError(emailInput);
-        clearFieldError(passwordInput);
-
-        if (values.fullName.length < 3) {
-            setFieldError(nameInput, "Ingresa un nombre valido de al menos 3 caracteres.");
-            isValid = false;
-        }
-
-        if (!isValidEmail(values.email)) {
-            setFieldError(emailInput, "Formato de correo no valido.");
-            isValid = false;
-        }
-
-        if (!isStrongPassword(values.password)) {
-            setFieldError(passwordInput, "Debe tener 8+ caracteres, mayuscula, minuscula y numero.");
-            isValid = false;
-        }
-
-        return isValid;
+        if (!values.fullName || values.fullName.length < 3) { setFieldError(nameEl, 'Nombre mínimo 3 caracteres'); ok = false; }
+        if (!isValidEmail(values.email)) { setFieldError(emailEl, 'Correo inválido'); ok = false; }
+        if (!isStrongPassword(values.password)) { setFieldError(pwdEl, 'Contraseña débil: use mayúscula, minúscula, número y símbolo'); ok = false; }
+        return ok;
     }
 
-    // Valida formulario de LOGIN: email valido, password minimo 8 caracteres
     function validateLogin(values, form) {
-        let isValid = true;
-
-        const emailInput = form.elements.email;
-        const passwordInput = form.elements.password;
-
-        clearFieldError(emailInput);
-        clearFieldError(passwordInput);
-
-        if (!isValidEmail(values.email)) {
-            setFieldError(emailInput, "Correo invalido para inicio de sesion.");
-            isValid = false;
-        }
-
-        if (values.password.length < 8) {
-            setFieldError(passwordInput, "La contrasena debe tener minimo 8 caracteres.");
-            isValid = false;
-        }
-
-        return isValid;
+        let ok = true;
+        const emailEl = form.querySelector('#login-email');
+        const pwdEl = form.querySelector('#login-password');
+        clearFieldError(emailEl); clearFieldError(pwdEl);
+        if (!isValidEmail(values.email)) { setFieldError(emailEl, 'Correo inválido'); ok = false; }
+        if (!values.password || values.password.length < 8) { setFieldError(pwdEl, 'Contraseña mínima 8 caracteres'); ok = false; }
+        return ok;
     }
 
-    // Valida formulario de CONTACTO: nombre (3+), email, mensaje (15+), detecta XSS
     function validateContact(values, form) {
-        let isValid = true;
-
-        const nameInput = form.elements.name;
-        const emailInput = form.elements.email;
-        const messageInput = form.elements.message;
-
-        clearFieldError(nameInput);
-        clearFieldError(emailInput);
-        clearFieldError(messageInput);
-
-        if (values.name.length < 3) {
-            setFieldError(nameInput, "El nombre debe tener al menos 3 caracteres.");
-            isValid = false;
-        }
-
-        if (!isValidEmail(values.email)) {
-            setFieldError(emailInput, "Correo de contacto invalido.");
-            isValid = false;
-        }
-
-        if (values.message.length < 15) {
-            setFieldError(messageInput, "El mensaje debe tener al menos 15 caracteres.");
-            isValid = false;
-        }
-
-        if (/(<script|javascript:|onerror=|onload=)/i.test(values.message)) {
-            setFieldError(messageInput, "Contenido potencialmente inseguro detectado.");
-            isValid = false;
-        }
-
-        return isValid;
+        let ok = true;
+        const nameEl = form.querySelector('#contact-name');
+        const emailEl = form.querySelector('#contact-email');
+        const msgEl = form.querySelector('#contact-message');
+        clearFieldError(nameEl); clearFieldError(emailEl); clearFieldError(msgEl);
+        if (!values.name || values.name.length < 3) { setFieldError(nameEl, 'Nombre mínimo 3 caracteres'); ok = false; }
+        if (!isValidEmail(values.email)) { setFieldError(emailEl, 'Correo inválido'); ok = false; }
+        if (!values.message || values.message.length < 15) { setFieldError(msgEl, 'Mensaje mínimo 15 caracteres'); ok = false; }
+        if (/(<script|javascript:|onerror=|onload=)/i.test(values.message)) { setFieldError(msgEl, 'Contenido potencialmente inseguro'); ok = false; }
+        return ok;
     }
 
-    function setupRegisterForm() {
-        dom.registerForm.addEventListener("submit", function onRegisterSubmit(event) {
-            event.preventDefault();
-            const values = getFormValues(dom.registerForm, ["fullName", "email", "password"]);
+    function setupForms() {
+        // Register
+        dom.registerForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const values = getValues(dom.registerForm, ['fullName','email','password']);
+            if (!validateRegister(values, dom.registerForm)) return;
+            appState.submissions.register.push({ name: values.fullName, email: values.email, createdAt: new Date().toISOString() });
+            dom.registerForm.reset(); updateActivityLog();
+        });
 
-            if (!validateRegister(values, dom.registerForm)) {
-                return;
-            }
+        // Login
+        dom.loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const values = getValues(dom.loginForm, ['email','password']);
+            if (!validateLogin(values, dom.loginForm)) return;
+            appState.submissions.login.push({ email: values.email, createdAt: new Date().toISOString() });
+            dom.loginForm.reset(); updateActivityLog();
+        });
 
-            addSubmissionRecord("register", {
-                fullName: values.fullName,
-                email: values.email,
-                createdAt: new Date().toISOString()
-            });
-
-            dom.registerForm.reset();
+        // Contact
+        dom.contactForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const values = getValues(dom.contactForm, ['name','email','message']);
+            if (!validateContact(values, dom.contactForm)) return;
+            appState.submissions.contact.push({ name: values.name, email: values.email, message: values.message, createdAt: new Date().toISOString() });
+            dom.contactForm.reset(); updateActivityLog();
         });
     }
 
-    function setupLoginForm() {
-        dom.loginForm.addEventListener("submit", function onLoginSubmit(event) {
-            event.preventDefault();
-            const values = getFormValues(dom.loginForm, ["email", "password"]);
-
-            if (!validateLogin(values, dom.loginForm)) {
-                return;
-            }
-
-            addSubmissionRecord("loginAttempts", {
-                email: values.email,
-                createdAt: new Date().toISOString()
-            });
-
-            dom.loginForm.reset();
-        });
-    }
-
-    function setupContactForm() {
-        dom.contactForm.addEventListener("submit", function onContactSubmit(event) {
-            event.preventDefault();
-            const values = getFormValues(dom.contactForm, ["name", "email", "message"]);
-
-            if (!validateContact(values, dom.contactForm)) {
-                return;
-            }
-
-            addSubmissionRecord("contacts", {
-                name: values.name,
-                email: values.email,
-                message: values.message,
-                createdAt: new Date().toISOString()
-            });
-
-            dom.contactForm.reset();
-        });
-    }
-
-    // API INTEGRATION - Obtiene datos de Ditto desde PokeAPI
-    // Renderiza tipo, habilidades y descripcion dinamicamente
-    async function fetchDitto() {
-        if (!dom.dittoImg || !dom.dittoName || !dom.dittoInfo || !dom.dittoAbilities || !dom.dittoFlavor) {
-            return;
-        }
-
-        try {
-            const response = await fetch("https://pokeapi.co/api/v2/pokemon/ditto");
-            if (!response.ok) {
-                return;
-            }
-
-            const pokemon = await response.json();
-            const image =
-                (pokemon.sprites && pokemon.sprites.other && pokemon.sprites.other["official-artwork"] && pokemon.sprites.other["official-artwork"].front_default) ||
-                (pokemon.sprites && pokemon.sprites.front_default) ||
-                dom.dittoImg.src;
-
-            const types = (pokemon.types || []).map(function mapType(item) {
-                return capitalize(item.type.name);
-            }).join(", ");
-            const heightM = ((pokemon.height || 0) / 10).toFixed(1);
-            const weightKg = ((pokemon.weight || 0) / 10).toFixed(1);
-            const abilities = (pokemon.abilities || []).map(function mapAbility(item) {
-                return capitalize(item.ability.name);
-            }).join(", ");
-
-            dom.dittoImg.src = image;
-            dom.dittoImg.alt = pokemon.name || "Ditto";
-            dom.dittoName.textContent = capitalize(pokemon.name || "Ditto");
-            dom.dittoInfo.textContent = "Tipo: " + (types || "Desconocido") + " - Altura: " + heightM + " m - Peso: " + weightKg + " kg";
-            dom.dittoAbilities.textContent = "Habilidades: " + (abilities || "Desconocidas");
-            dom.dittoFlavor.textContent = "Pokemon inicial destacado de la pagina.";
-            
-            // Tambien carga Ditto en el header como logo dinamico
-            if (dom.headerDittoImg) {
-                dom.headerDittoImg.src = image;
-            }
-        } catch (error) {
-            console.warn("No se pudo cargar Ditto:", error);
-        }
-    }
-
-    // INITIALIZATION - Punto de entrada de la aplicacion
-    // Ejecuta todas las funciones de configuracion en el orden correcto
+    // ---------------- Initialization ----------------
     function init() {
-        buildIndicators();
-        renderSlide();
-        setupCarouselEvents();
-        setupRegisterForm();
-        setupLoginForm();
-        setupContactForm();
-        fetchDitto();
+        buildCarousel();
+        renderProductList();
+        setupForms();
+        // controls
+        dom.prevBtn.addEventListener('click', () => { prev(); startAutoRotate(); });
+        dom.nextBtn.addEventListener('click', () => { next(); startAutoRotate(); });
+        dom.carouselView.tabIndex = -1; // allow focus for accessibility
+        // indicators initial buttons
+        qsa('#carousel-indicators li').forEach((li, idx) => {
+            const btn = li.querySelector('button');
+            if (btn) btn.addEventListener('click', () => startAutoRotate());
+        });
+
+        startAutoRotate();
+        updateActivityLog();
     }
 
-    init();
+    // start
+    document.addEventListener('DOMContentLoaded', init);
 })();

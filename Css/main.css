@@ -1,14 +1,13 @@
 :root {
-    --bg: #0b1220;
-    --text: #e6eef8;
-    --text-lg: #ffffff;
-    --card: #0f1724;
-    --accent: #0ea5a4;
-    --secondary: #00e5ff;
-    --muted: #98a0b3;
+    --bg: #fff7f5;
+    --text: #2b2b2b;
+    --muted: #6b6b6b;
+    --accent: #e76f51; /* color principal (rosa/dulce) */
+    --accent-2: #f4a261;
+    --card: #ffffff;
+    --glass: rgba(0,0,0,0.04);
+    --success: #06b6d4;
     --error: #ef4444;
-    --glass: rgba(255, 255, 255, 0.03);
-    --glass-hover: rgba(255, 255, 255, 0.08);
 }
 
 * {
@@ -24,7 +23,7 @@ body {
     margin: 0;
     font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     color: var(--text);
-    background: linear-gradient(180deg, #071026 0%, #07172a 50%), var(--bg);
+    background: var(--bg);
     line-height: 1.6;
 }
 
@@ -32,10 +31,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 2rem;
-    padding: 1.2rem 1.8rem;
-    backdrop-filter: blur(6px);
-    background: rgba(11, 18, 32, 0.8);
+    gap: 1rem;
+    padding: 1rem 1.4rem;
+    background: linear-gradient(90deg, rgba(231,111,81,0.08), rgba(244,162,97,0.05));
     border-bottom: 1px solid var(--glass);
     flex-wrap: wrap;
 }
@@ -70,26 +68,25 @@ body {
 .brand-title {
     margin: 0;
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: 1.25rem;
 }
 
 .brand-subtitle {
     margin: 0;
     color: var(--muted);
-    font-size: 0.75rem;
+    font-size: 0.9rem;
 }
 
 .main-nav {
     display: flex;
-    flex-wrap: wrap;
     gap: 0.6rem;
 }
 
 .main-nav a {
     text-decoration: none;
-    color: var(--muted);
+    color: var(--text);
     font-weight: 600;
-    padding: 0.5rem 0.75rem;
+    padding: 0.45rem 0.75rem;
     border-radius: 0.5rem;
     border: 1px solid transparent;
 }
@@ -103,19 +100,17 @@ body {
 }
 
 .layout-main {
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 1.6rem auto;
-    padding: 0 1.4rem;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.3rem;
+    padding: 0 1rem;
+    display: block;
 }
 
 .panel {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+    background: var(--card);
     border: 1px solid var(--glass);
-    border-radius: 0.875rem;
-    box-shadow: 0 6px 28px rgba(2, 6, 23, 0.6);
+    border-radius: 0.75rem;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
     padding: 1.25rem;
 }
 
@@ -124,14 +119,7 @@ body {
 }
 
 .ditto-card {
-    display: flex;
-    gap: 0.8rem;
-    align-items: center;
-    background: var(--card);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 0.75rem;
-    padding: 0.8rem;
-    margin-bottom: 1rem;
+    display: none;
 }
 
 #dittoImg {
@@ -157,11 +145,11 @@ body {
 .panel-head h1,
 .panel h2 {
     margin: 0;
-    color: var(--text-lg);
+    color: var(--text);
 }
 
 .panel-head h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
 }
 
 .panel h2 {
@@ -175,7 +163,7 @@ body {
 
 .lead {
     color: var(--muted);
-    margin: 0.5rem 0 1.1rem;
+    margin: 0.5rem 0 1rem;
 }
 
 .slider-shell {
@@ -184,17 +172,7 @@ body {
 }
 
 .slider-media {
-    display: grid;
-    grid-template-columns: minmax(200px, 350px) 1fr;
-    gap: 1.8rem;
-    align-items: center;
-    margin: 0;
-    border: 2px solid rgba(0, 229, 255, 0.3);
-    border-radius: 16px;
-    padding: 2rem;
-    background: linear-gradient(135deg, rgba(15, 23, 36, 0.7), rgba(0, 229, 255, 0.08));
-    transition: all 0.4s ease;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    display: none;
 }
 
 .slider-media img {
@@ -243,24 +221,21 @@ body {
 }
 
 button {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: var(--card);
-    color: var(--text);
-    border-radius: 12px;
-    padding: 0.8rem 1.2rem;
+    border: 1px solid rgba(0,0,0,0.06);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
     font-weight: 600;
     font-size: 1rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
 button:hover,
 button:focus-visible {
-    background: var(--glass-hover);
-    border-color: var(--secondary);
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 229, 255, 0.2);
-    outline: 2px solid transparent;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
 #shuffle-slide {
@@ -312,7 +287,7 @@ button:focus-visible {
 }
 
 fieldset {
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(0,0,0,0.06);
     border-radius: 12px;
     padding: 0.9rem;
 }
@@ -333,12 +308,12 @@ input,
 textarea {
     width: 100%;
     margin-top: 0.25rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(0,0,0,0.06);
     border-radius: 8px;
-    padding: 0.55rem 0.65rem;
+    padding: 0.6rem 0.65rem;
     font: inherit;
     color: inherit;
-    background: rgba(255, 255, 255, 0.03);
+    background: #fff;
 }
 
 input:focus,
@@ -369,8 +344,7 @@ textarea:focus {
     text-align: center;
     padding: 1.2rem 1rem;
     color: var(--muted);
-    border-top: 1px solid rgba(255, 255, 255, 0.03);
-    background: rgba(11, 18, 32, 0.8);
+    border-top: 1px solid rgba(0,0,0,0.04);
 }
 
 @media (max-width: 880px) {
@@ -410,4 +384,67 @@ textarea:focus {
             transform: translateY(0);
         }
     }
+}
+
+/* Carousel and product list styles */
+.carousel {
+    display: grid;
+    gap: 1rem;
+    align-items: center;
+}
+.carousel-view {
+    background: linear-gradient(180deg, #fff, #fffdfc);
+    border: 1px solid rgba(0,0,0,0.04);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+}
+.carousel-view img {
+    max-width: 420px;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+.carousel-controls {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+.carousel-indicators {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: center;
+    padding: 0;
+}
+.carousel-indicators li button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.12);
+}
+.carousel-indicators li button[aria-current="true"] {
+    background: var(--accent);
+}
+.product-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.product-card {
+    border: 1px solid rgba(0,0,0,0.04);
+    border-radius: 10px;
+    padding: 0.75rem;
+    background: #fff;
+}
+.product-card img {
+    width: 100%;
+    border-radius: 8px;
+    height: 160px;
+    object-fit: cover;
 }

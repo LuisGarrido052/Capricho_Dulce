@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PokeDex - Landing 2026</title>
-    <meta name="description" content="Landing PokeDex con slider Pokemon y formularios de registro, login y contacto.">
+    <title>Capricho dulce — Endulza tu momento</title>
+    <meta name="description" content="Capricho dulce: pasteles, tortas, alfajores y dulces. Registro, login y contacto.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -12,60 +12,42 @@
     <link rel="icon" href="Images/pokedex-3.ico" type="image/x-icon">
 </head>
 <body>
-    <!-- HEADER: Navegacion principal -->
-    <header class="site-header">
-        <!-- Logo dinamico Ditto en el header -->
-        <div class="brand-wrap">
-            <img id="headerDittoImg" src="" alt="Ditto logo" class="header-ditto-logo" aria-hidden="true">
-            <div>
-                <p class="brand-title">PokeDex</p>
-                <p class="brand-subtitle">Explora Pokemon</p>
-            </div>
+    <header class="site-header" role="banner">
+        <div class="brand">
+            <h1 class="brand-title">Capricho dulce</h1>
+            <p class="brand-sub">Endulza tu momento</p>
         </div>
 
-        <!-- Menu de navegacion -->
-        <nav aria-label="Navegacion principal" class="main-nav">
-            <a href="#slider">Inicio</a>
+        <nav class="main-nav" role="navigation" aria-label="Navegación principal">
+            <a href="#hero">Inicio</a>
+            <a href="#productos">Productos</a>
             <a href="#registro">Registro</a>
             <a href="#login">Login</a>
             <a href="#contacto">Contacto</a>
         </nav>
     </header>
 
-    <main class="layout-main">
-        <section id="slider" class="panel slider-panel" aria-labelledby="slider-title">
-            <div id="dittoCard" class="ditto-card" aria-label="Pokemon destacado inicial">
-                <img id="dittoImg" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" alt="Ditto">
-                <div>
-                    <h2 id="dittoName">Ditto</h2>
-                    <p id="dittoInfo">Tipo: Normal</p>
-                    <p id="dittoAbilities"></p>
-                    <p id="dittoFlavor"></p>
-                </div>
+    <main>
+        <section id="hero" class="hero panel" aria-labelledby="hero-title">
+            <div class="hero-content">
+                <h2 id="hero-title">Nuestros favoritos</h2>
+                <p class="lead">Pasteles, tortas, alfajores y más — hechos con amor.</p>
             </div>
 
-            <div class="panel-head">
-                <h1 id="slider-title">Descubre y explora Pokemon</h1>
-                <p class="lead">Carrusel dinamico con controles. Modifica el DOM dinamicamente con JavaScript.</p>
-            </div>
-
-            <article class="slider-shell" aria-label="Carrusel Pokemon">
-                <figure class="slider-media">
-                    <img id="pokemon-image" src="" alt="" class="slider-image">
-                    <figcaption class="slider-info">
-                        <h2 id="pokemon-name"></h2>
-                        <p id="pokemon-meta"></p>
-                    </figcaption>
-                </figure>
-
-                <div class="slider-controls">
-                    <button type="button" id="prev-slide" aria-label="Pokemon anterior" class="control-btn">← Anterior</button>
-                    <button type="button" id="next-slide" aria-label="Pokemon siguiente" class="control-btn">Siguiente →</button>
-                    <button type="button" id="shuffle-slide" aria-label="Pokemon aleatorio" class="control-btn">🎲 Aleatorio</button>
+            <div id="carousel" class="carousel" aria-roledescription="carousel">
+                <div id="carousel-view" class="carousel-view" aria-live="polite"></div>
+                <div class="carousel-controls">
+                    <button id="prev" aria-label="Anterior">◀</button>
+                    <button id="next" aria-label="Siguiente">▶</button>
                 </div>
+                <ol id="carousel-indicators" class="carousel-indicators" aria-label="Indicadores de carrusel"></ol>
+            </div>
+        </section>
 
-                <ul id="slider-indicators" class="slider-indicators" aria-label="Seleccion de Pokemon"></ul>
-            </article>
+        <section id="productos" class="panel" aria-labelledby="productos-title">
+            <h2 id="productos-title">Nuestros Productos</h2>
+            <p class="lead">Selecciona un producto en el carrusel para ver más detalles.</p>
+            <div id="product-list" class="product-list" aria-live="polite"></div>
         </section>
 
         <section id="registro" class="panel" aria-labelledby="registro-title">
@@ -73,18 +55,17 @@
             <form id="register-form" novalidate>
                 <fieldset>
                     <legend>Crear cuenta</legend>
+                    <label for="reg-name">Nombre completo</label>
+                    <input id="reg-name" name="fullName" type="text" required minlength="3" maxlength="80" autocomplete="name">
+                    <small class="error" data-error-for="reg-name"></small>
 
-                    <label for="register-name">Nombre completo</label>
-                    <input id="register-name" name="fullName" type="text" autocomplete="name" required maxlength="80">
-                    <small class="error" data-error-for="register-name"></small>
+                    <label for="reg-email">Correo electrónico</label>
+                    <input id="reg-email" name="email" type="email" required autocomplete="email">
+                    <small class="error" data-error-for="reg-email"></small>
 
-                    <label for="register-email">Correo electronico</label>
-                    <input id="register-email" name="email" type="email" autocomplete="email" required maxlength="120">
-                    <small class="error" data-error-for="register-email"></small>
-
-                    <label for="register-password">Contrasena</label>
-                    <input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="64">
-                    <small class="error" data-error-for="register-password"></small>
+                    <label for="reg-password">Contraseña</label>
+                    <input id="reg-password" name="password" type="password" required minlength="8" autocomplete="new-password">
+                    <small class="error" data-error-for="reg-password"></small>
 
                     <button type="submit">Registrar</button>
                 </fieldset>
@@ -92,20 +73,19 @@
         </section>
 
         <section id="login" class="panel" aria-labelledby="login-title">
-            <h2 id="login-title">Inicio de sesion</h2>
+            <h2 id="login-title">Inicio de sesión</h2>
             <form id="login-form" novalidate>
                 <fieldset>
-                    <legend>Acceso de usuario</legend>
-
-                    <label for="login-email">Correo electronico</label>
-                    <input id="login-email" name="email" type="email" autocomplete="email" required maxlength="120">
+                    <legend>Ingresar</legend>
+                    <label for="login-email">Correo electrónico</label>
+                    <input id="login-email" name="email" type="email" required autocomplete="email">
                     <small class="error" data-error-for="login-email"></small>
 
-                    <label for="login-password">Contrasena</label>
-                    <input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="64">
+                    <label for="login-password">Contraseña</label>
+                    <input id="login-password" name="password" type="password" required minlength="8" autocomplete="current-password">
                     <small class="error" data-error-for="login-password"></small>
 
-                    <button type="submit">Ingresar</button>
+                    <button type="submit">Entrar</button>
                 </fieldset>
             </form>
         </section>
@@ -114,18 +94,17 @@
             <h2 id="contact-title">Contacto</h2>
             <form id="contact-form" novalidate>
                 <fieldset>
-                    <legend>Envianos tu consulta</legend>
-
+                    <legend>Envíanos tu consulta</legend>
                     <label for="contact-name">Nombre</label>
-                    <input id="contact-name" name="name" type="text" autocomplete="name" required maxlength="80">
+                    <input id="contact-name" name="name" type="text" required minlength="3" maxlength="80">
                     <small class="error" data-error-for="contact-name"></small>
 
-                    <label for="contact-email">Correo electronico</label>
-                    <input id="contact-email" name="email" type="email" autocomplete="email" required maxlength="120">
+                    <label for="contact-email">Correo electrónico</label>
+                    <input id="contact-email" name="email" type="email" required>
                     <small class="error" data-error-for="contact-email"></small>
 
                     <label for="contact-message">Mensaje</label>
-                    <textarea id="contact-message" name="message" rows="5" required maxlength="500"></textarea>
+                    <textarea id="contact-message" name="message" rows="5" required minlength="15" maxlength="500"></textarea>
                     <small class="error" data-error-for="contact-message"></small>
 
                     <button type="submit">Enviar mensaje</button>
@@ -134,11 +113,11 @@
         </section>
     </main>
 
-    <footer class="site-footer">
-        <p id="activity-log" aria-live="polite">Aun no hay envios registrados.</p>
-        <p>Disenado como plantilla - Datos de ejemplo. © 2026</p>
+    <footer class="site-footer" role="contentinfo">
+        <p id="activity-log" aria-live="polite">No hay actividad registrada.</p>
+        <p>Capricho dulce © 2026 — Hecho con cariño.</p>
     </footer>
 
-    <script src="Js/main.js"></script>
+    <script src="Js/main.js" defer></script>
 </body>
 </html>
