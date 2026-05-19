@@ -5,7 +5,7 @@
       "nombre": "Torta Red Velvet",
       "descripcion": "Capas suaves de red velvet con relleno de crema de queso premium",
       "precio": 45.50,
-      "imagen": "Images/Productos/torta-red-velvet.jpg",
+      "imagen": "Images/Productos/341ca07636b34e4f53e8dec19b67a7e5.jpg",
       "categoria": "Tortas",
       "disponible": true
     },
@@ -14,7 +14,7 @@
       "nombre": "Alfajores Caseros",
       "descripcion": "Deliciosos alfajores rellenos de dulce de leche artesanal",
       "precio": 12.00,
-      "imagen": "Images/Productos/alfajores-caseros.jpg",
+      "imagen": "Images/Productos/alfajores.jpg",
       "categoria": "Alfajores",
       "disponible": true
     },
@@ -23,35 +23,35 @@
       "nombre": "Cheesecake de Frutos Rojos",
       "descripcion": "Base crocante y crema suave cubierta con frutos rojos frescos",
       "precio": 38.00,
-      "imagen": "Images/Productos/cheesecake-frutos-rojos.jpg",
+      "imagen": "Images/Productos/7dbb062b4e4ee585b8f684d492b68979.jpg",
       "categoria": "Tortas",
       "disponible": true
     },
     {
       "id": "p4",
-      "nombre": "Torta de Chocolate",
-      "descripcion": "Intenso bizcocho de chocolate con ganache brillante y decoración",
-      "precio": 42.00,
-      "imagen": "Images/Productos/torta-chocolate.jpg",
-      "categoria": "Tortas",
+      "nombre": "Cupcakes Oreo",
+      "descripcion": "Cupcakes esponjosos decorados con crema de queso y galletas Oreo",
+      "precio": 18.00,
+      "imagen": "Images/Productos/cupcakeoreo.jpg",
+      "categoria": "Cupcakes",
       "disponible": true
     },
     {
       "id": "p5",
-      "nombre": "Brownie Gourmet",
-      "descripcion": "Brownie artesanal con nueces y chocolate belga de alta calidad",
-      "precio": 15.50,
-      "imagen": "Images/Productos/brownie-gourmet.jpg",
-      "categoria": "Brownies",
+      "nombre": "Cupcakes Variados",
+      "descripcion": "Deliciosa variedad de cupcakes con diferentes sabores y decoraciones",
+      "precio": 16.50,
+      "imagen": "Images/Productos/cupcakes.jpg",
+      "categoria": "Cupcakes",
       "disponible": true
     },
     {
       "id": "p6",
-      "nombre": "Lemon Pie Casero",
-      "descripcion": "Pie clásico con limón fresco y merengue tostado a mano",
-      "precio": 28.00,
-      "imagen": "Images/Productos/lemon-pie.jpg",
-      "categoria": "Pies",
+      "nombre": "Mini Cookies Artesanales",
+      "descripcion": "Galletas pequeñas caseras con chocolate chips y sabor auténtico",
+      "precio": 8.50,
+      "imagen": "Images/Productos/minicookies.jpg",
+      "categoria": "Galletas",
       "disponible": true
     }
   ]
