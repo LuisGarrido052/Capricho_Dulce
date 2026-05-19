@@ -262,6 +262,35 @@ body {
     margin-top: var(--spacing-md);
 }
 
+.hero-kicker {
+    display: inline-block;
+    margin-bottom: var(--spacing-sm);
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(231, 111, 81, 0.12);
+    color: var(--primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.status-message {
+    display: inline-block;
+    margin-top: var(--spacing-lg);
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: rgba(42, 157, 143, 0.12);
+    color: var(--accent);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.status-message--error {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--error);
+}
+
 .carousel-container {
     display: flex;
     justify-content: center;
@@ -322,10 +351,12 @@ body {
 }
 
 .carousel-product-image::before {
-    content: '🍰';
-    font-size: 120px;
+    content: '';
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 45%, transparent 70%);
     position: absolute;
-    opacity: 0.08;
     z-index: 0;
     animation: float 4s ease-in-out infinite;
 }
@@ -373,6 +404,21 @@ body {
     font-weight: 700;
     margin: var(--spacing-xl) 0 0 0;
     text-shadow: 0 2px 4px rgba(244, 162, 97, 0.25);
+}
+
+.photo-credit {
+    margin-top: var(--spacing-md);
+    font-size: 0.95rem;
+}
+
+.photo-credit a {
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.photo-credit a:hover {
+    text-decoration: underline;
 }
 
 /* Controles del carrusel */

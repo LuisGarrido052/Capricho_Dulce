@@ -1,38 +1,30 @@
-T<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Rincón Dulce Delicia - Pasteles, tortas, alfajores y dulces artesanales. Endulza tu momento con nuestras delicias caseras.">
-    <meta name="keywords" content="pasteles, tortas, alfajores, dulces, repostería, artesanal">
-    <meta name="author" content="Rincón Dulce Delicia">
-    <title>Rincón Dulce Delicia — Endulza tu momento</title>
-    
-    <!-- Preload de fuentes -->
+    <meta name="description" content="Capricho Dulce - Repostería artesanal con imágenes en tiempo real desde Unsplash. Endulza tu momento con tortas, cupcakes y postres premium.">
+    <meta name="keywords" content="repostería, tortas, cupcakes, postres, pastries, dessert, cake">
+    <meta name="author" content="Capricho Dulce">
+    <title>Capricho Dulce — Endulza tu momento</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-    
-    <!-- Estilos -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="Css/main.css">
-    
-    <!-- Favicon -->
-    <link rel="icon" href="Images/pokedex-3.ico" type="image/x-icon">
+    <link rel="icon" href="Images/LOGO%20OFICIAL.jpeg" type="image/jpeg">
 </head>
 <body>
-    <!-- Header / Encabezado -->
     <header class="site-header" role="banner">
         <div class="brand">
             <div class="brand-logo-container">
-                <img src="Images/LOGO OFICIAL.jpeg" alt="Logo de Rincón Dulce Delicia" class="brand-logo">
+                <img src="Images/LOGO OFICIAL.jpeg" alt="Logo de Capricho Dulce" class="brand-logo">
                 <div class="brand-text">
-                    <h1 class="brand-title">Rincón Dulce Delicia</h1>
+                    <h1 class="brand-title">Capricho Dulce</h1>
                     <p class="brand-subtitle">Endulza tu momento</p>
                 </div>
             </div>
-            <img src="Images/Imagen principal.jpeg" alt="Productos de Rincón Dulce Delicia - Pasteles, tortas y dulces artesanales" class="brand-image">
+            <img src="Images/LOGO OFICIAL.jpeg" alt="Sello visual de Capricho Dulce" class="brand-image">
         </div>
-
         <nav class="main-nav" role="navigation" aria-label="Navegación principal">
             <ul class="nav-list">
                 <li><a href="#hero" class="nav-link">Inicio</a></li>
@@ -44,264 +36,126 @@ T<!DOCTYPE html>
         </nav>
     </header>
 
-    <!-- Contenido Principal -->
     <main class="main-content">
-        
-        <!-- Sección Hero con Carrusel -->
         <section id="hero" class="hero panel" aria-labelledby="hero-title">
             <div class="hero-content">
+                <p class="hero-kicker">Imágenes en vivo desde Unsplash</p>
                 <h2 id="hero-title">Nuestros Favoritos</h2>
-                <p class="hero-subtitle">Descubre los productos más deliciosos de nuestra repostería</p>
+                <p class="hero-subtitle">El carrusel consume una API real y rota automáticamente cada 5 segundos.</p>
+                <p id="api-status" class="status-message" aria-live="polite">Cargando fotografías de repostería...</p>
             </div>
-
-            <!-- Carrusel de Productos -->
             <div class="carousel-container">
                 <div id="carousel" class="carousel" aria-roledescription="carrusel de productos">
                     <div id="carousel-view" class="carousel-view" aria-live="polite" aria-atomic="true"></div>
-                    
                     <div class="carousel-controls">
-                        <button id="prev-btn" class="carousel-btn carousel-btn--prev" aria-label="Producto anterior">
-                            <span aria-hidden="true">❮</span>
-                        </button>
-                        <button id="next-btn" class="carousel-btn carousel-btn--next" aria-label="Producto siguiente">
-                            <span aria-hidden="true">❯</span>
-                        </button>
+                        <button id="prev-btn" class="carousel-btn carousel-btn--prev" type="button" aria-label="Producto anterior"><span aria-hidden="true">❮</span></button>
+                        <button id="next-btn" class="carousel-btn carousel-btn--next" type="button" aria-label="Producto siguiente"><span aria-hidden="true">❯</span></button>
                     </div>
-                    
                     <ol id="carousel-indicators" class="carousel-indicators" aria-label="Indicadores del carrusel"></ol>
                 </div>
             </div>
         </section>
 
-        <!-- Sección de Productos Grid -->
         <section id="productos" class="products panel" aria-labelledby="productos-title">
-            <h2 id="productos-title">Nuestros Productos</h2>
-            <p class="section-subtitle">Todos nuestros productos son elaborados de forma artesanal con ingredientes de calidad</p>
+            <h2 id="productos-title">Galería Destacada</h2>
+            <p class="section-subtitle">El arreglo resultante de Unsplash se reutiliza para construir tarjetas con imagen, autor y descripción.</p>
             <div id="product-list" class="product-grid" aria-live="polite"></div>
         </section>
 
-        <!-- Sección Registro -->
         <section id="registro" class="auth-section panel" aria-labelledby="registro-title">
             <div class="auth-container">
                 <h2 id="registro-title">Crear Cuenta</h2>
                 <p class="section-subtitle">Únete a nuestra comunidad y disfruta de ofertas exclusivas</p>
-                
                 <form id="register-form" class="auth-form" novalidate>
                     <fieldset>
                         <legend class="visually-hidden">Formulario de registro</legend>
-                        
                         <div class="form-group">
                             <label for="reg-name" class="form-label">Nombre Completo <span class="required">*</span></label>
-                            <input 
-                                id="reg-name" 
-                                name="fullName" 
-                                type="text" 
-                                class="form-input"
-                                placeholder="Tu nombre completo"
-                                required 
-                                minlength="3" 
-                                maxlength="80" 
-                                autocomplete="name"
-                                aria-describedby="reg-name-error">
+                            <input id="reg-name" name="fullName" type="text" class="form-input" placeholder="Tu nombre completo" required minlength="3" maxlength="80" autocomplete="name" aria-describedby="reg-name-error">
                             <small id="reg-name-error" class="form-error" role="alert"></small>
                         </div>
-
                         <div class="form-group">
                             <label for="reg-email" class="form-label">Correo Electrónico <span class="required">*</span></label>
-                            <input 
-                                id="reg-email" 
-                                name="email" 
-                                type="email" 
-                                class="form-input"
-                                placeholder="tu.correo@ejemplo.com"
-                                required 
-                                autocomplete="email"
-                                aria-describedby="reg-email-error">
+                            <input id="reg-email" name="email" type="email" class="form-input" placeholder="tu.correo@ejemplo.com" required autocomplete="email" aria-describedby="reg-email-error">
                             <small id="reg-email-error" class="form-error" role="alert"></small>
                         </div>
-
                         <div class="form-group">
                             <label for="reg-password" class="form-label">Contraseña <span class="required">*</span></label>
-                            <input 
-                                id="reg-password" 
-                                name="password" 
-                                type="password" 
-                                class="form-input"
-                                placeholder="Mínimo 8 caracteres"
-                                required 
-                                minlength="8" 
-                                autocomplete="new-password"
-                                aria-describedby="reg-password-error">
+                            <input id="reg-password" name="password" type="password" class="form-input" placeholder="Mínimo 8 caracteres" required minlength="8" autocomplete="new-password" aria-describedby="reg-password-error">
                             <small id="reg-password-error" class="form-error" role="alert"></small>
                         </div>
-
                         <button type="submit" class="form-submit">Registrar</button>
                     </fieldset>
                 </form>
-                
                 <p class="form-footer">¿Ya tienes cuenta? <a href="#login">Inicia sesión aquí</a></p>
             </div>
         </section>
 
-        <!-- Sección Login -->
         <section id="login" class="auth-section panel" aria-labelledby="login-title">
             <div class="auth-container">
                 <h2 id="login-title">Iniciar Sesión</h2>
                 <p class="section-subtitle">Accede a tu cuenta y disfruta de tus compras</p>
-                
                 <form id="login-form" class="auth-form" novalidate>
                     <fieldset>
                         <legend class="visually-hidden">Formulario de inicio de sesión</legend>
-                        
                         <div class="form-group">
                             <label for="login-email" class="form-label">Correo Electrónico <span class="required">*</span></label>
-                            <input 
-                                id="login-email" 
-                                name="email" 
-                                type="email" 
-                                class="form-input"
-                                placeholder="tu.correo@ejemplo.com"
-                                required 
-                                autocomplete="email"
-                                aria-describedby="login-email-error">
+                            <input id="login-email" name="email" type="email" class="form-input" placeholder="tu.correo@ejemplo.com" required autocomplete="email" aria-describedby="login-email-error">
                             <small id="login-email-error" class="form-error" role="alert"></small>
                         </div>
-
                         <div class="form-group">
                             <label for="login-password" class="form-label">Contraseña <span class="required">*</span></label>
-                            <input 
-                                id="login-password" 
-                                name="password" 
-                                type="password" 
-                                class="form-input"
-                                placeholder="Tu contraseña"
-                                required 
-                                minlength="8" 
-                                autocomplete="current-password"
-                                aria-describedby="login-password-error">
+                            <input id="login-password" name="password" type="password" class="form-input" placeholder="Tu contraseña" required minlength="8" autocomplete="current-password" aria-describedby="login-password-error">
                             <small id="login-password-error" class="form-error" role="alert"></small>
                         </div>
-
                         <button type="submit" class="form-submit">Entrar</button>
                     </fieldset>
                 </form>
-                
                 <p class="form-footer">¿No tienes cuenta? <a href="#registro">Regístrate aquí</a></p>
             </div>
         </section>
 
-        <!-- Sección Contacto -->
         <section id="contacto" class="contact-section panel" aria-labelledby="contacto-title">
             <div class="contact-container">
                 <h2 id="contacto-title">Contacto</h2>
                 <p class="section-subtitle">¿Tienes preguntas? Nos gustaría escucharte</p>
-                
                 <form id="contact-form" class="contact-form" novalidate>
                     <fieldset>
                         <legend class="visually-hidden">Formulario de contacto</legend>
-                        
                         <div class="form-group">
                             <label for="contact-name" class="form-label">Nombre <span class="required">*</span></label>
-                            <input 
-                                id="contact-name" 
-                                name="name" 
-                                type="text" 
-                                class="form-input"
-                                placeholder="Tu nombre"
-                                required 
-                                minlength="3" 
-                                maxlength="80"
-                                aria-describedby="contact-name-error">
+                            <input id="contact-name" name="name" type="text" class="form-input" placeholder="Tu nombre" required minlength="3" maxlength="80" aria-describedby="contact-name-error">
                             <small id="contact-name-error" class="form-error" role="alert"></small>
                         </div>
-
                         <div class="form-group">
                             <label for="contact-email" class="form-label">Correo Electrónico <span class="required">*</span></label>
-                            <input 
-                                id="contact-email" 
-                                name="email" 
-                                type="email" 
-                                class="form-input"
-                                placeholder="tu.correo@ejemplo.com"
-                                required
-                                autocomplete="email"
-                                aria-describedby="contact-email-error">
+                            <input id="contact-email" name="email" type="email" class="form-input" placeholder="tu.correo@ejemplo.com" required autocomplete="email" aria-describedby="contact-email-error">
                             <small id="contact-email-error" class="form-error" role="alert"></small>
                         </div>
-
                         <div class="form-group">
                             <label for="contact-phone" class="form-label">Teléfono (opcional)</label>
-                            <input 
-                                id="contact-phone" 
-                                name="phone" 
-                                type="tel" 
-                                class="form-input"
-                                placeholder="Tu teléfono"
-                                autocomplete="tel">
+                            <input id="contact-phone" name="phone" type="tel" class="form-input" placeholder="Tu teléfono" autocomplete="tel">
                         </div>
-
                         <div class="form-group">
                             <label for="contact-subject" class="form-label">Asunto <span class="required">*</span></label>
-                            <input 
-                                id="contact-subject" 
-                                name="subject" 
-                                type="text" 
-                                class="form-input"
-                                placeholder="Asunto de tu mensaje"
-                                required 
-                                minlength="5" 
-                                maxlength="100"
-                                aria-describedby="contact-subject-error">
+                            <input id="contact-subject" name="subject" type="text" class="form-input" placeholder="Asunto de tu mensaje" required minlength="5" maxlength="100" aria-describedby="contact-subject-error">
                             <small id="contact-subject-error" class="form-error" role="alert"></small>
                         </div>
-
                         <div class="form-group">
                             <label for="contact-message" class="form-label">Mensaje <span class="required">*</span></label>
-                            <textarea 
-                                id="contact-message" 
-                                name="message" 
-                                class="form-textarea"
-                                placeholder="Cuéntanos tu consulta..."
-                                required 
-                                minlength="10" 
-                                maxlength="1000"
-                                rows="6"
-                                aria-describedby="contact-message-error"></textarea>
+                            <textarea id="contact-message" name="message" class="form-textarea" placeholder="Cuéntanos tu consulta..." required minlength="10" maxlength="1000" rows="6" aria-describedby="contact-message-error"></textarea>
                             <small id="contact-message-error" class="form-error" role="alert"></small>
                         </div>
-
                         <button type="submit" class="form-submit">Enviar Mensaje</button>
                     </fieldset>
                 </form>
             </div>
         </section>
-
     </main>
 
-    <!-- Footer -->
     <footer class="site-footer" role="contentinfo">
         <div class="footer-content">
             <p>&copy; 2026 Capricho Dulce. Todos los derechos reservados.</p>
-            <p class="footer-tagline">Endulza tu momento ♥</p>
-        </div>
-    </footer>
-
-    <!-- Script principal -->
-    <script src="Js/main.js"></script>
-</body>
-</html>
-                    <textarea id="contact-message" name="message" rows="5" required minlength="15" maxlength="500"></textarea>
-                    <small class="error" data-error-for="contact-message"></small>
-
-                    <button type="submit">Enviar mensaje</button>
-                </fieldset>
-            </form>
-        </section>
-    </main>
-
-    <footer class="site-footer" role="contentinfo">
-        <div class="footer-content">
-            <p>&copy; 2026 Rincón Dulce Delicia. Todos los derechos reservados.</p>
             <p class="footer-tagline">Endulza tu momento ♥</p>
         </div>
     </footer>

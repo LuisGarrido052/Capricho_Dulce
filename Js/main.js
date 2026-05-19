@@ -1,31 +1,17 @@
 "use strict";
 
-/**
- * CAPRICHO DULCE - Aplicación Front-End
- * Proyecto Analista Programador - Estructuras Dinámicas
- * 
- * Módulos principales:
- * - API: Consumo asincrónico de datos JSON
- * - Carrusel: Slider dinámico con cambio automático cada 5 segundos
- * - Validación: Validación de formularios con buenas prácticas
- * - Storage: Almacenamiento de datos de formularios
- */
-
 (function BakeryApp() {
-    'use strict';
-
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* CONFIGURACIÓN Y ESTADO GLOBAL                                  */
-    /* ═══════════════════════════════════════════════════════════════ */
-
     const CONFIG = {
-        API_URL: './productos.json',
-        CAROUSEL_INTERVAL: 5000, // 5 segundos
-        FORM_STORAGE_KEY: 'bakery_forms_data'
+        UNSPLASH_ACCESS_KEY: 'HtQreZOas3YROzZBpF4eNJej6uduHR_gTt8uycicQVU',
+        UNSPLASH_ENDPOINT: 'https://api.unsplash.com/search/photos',
+        UNSPLASH_QUERIES: ['pastry', 'cake', 'dessert'],
+        UNSPLASH_PER_PAGE: 5,
+        CAROUSEL_INTERVAL: 5000,
+        FORM_STORAGE_KEY: 'capricho_dulce_forms'
     };
 
     const STATE = {
-        products: [],
+        photos: [],
         currentCarouselIndex: 0,
         carouselIntervalId: null,
         formSubmissions: {
@@ -35,143 +21,129 @@
         }
     };
 
-    const DOM_REFS = {};
-
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* MÓDULO: UTILIDADES                                              */
-    /* ═══════════════════════════════════════════════════════════════ */
+    const DOM = {};
 
     const Utils = {
-        /**
-         * Valida si un email tiene formato correcto
-         * @param {string} email - Email a validar
-         * @returns {boolean} - true si es válido
-         */
         isValidEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
         },
 
-        /**
-         * Valida si una contraseña cumple requisitos de seguridad
-         * @param {string} password - Contraseña a validar
-         * @returns {boolean} - true si tiene al menos 8 caracteres
-         */
         isValidPassword(password) {
-            return password && password.length >= 8;
+            return typeof password === 'string' && password.trim().length >= 8;
         },
 
-        /**
-         * Valida si un texto no está vacío y tiene longitud mínima
-         * @param {string} text - Texto a validar
-         * @param {number} minLength - Longitud mínima
-         * @returns {boolean} - true si es válido
-         */
         isValidText(text, minLength = 3) {
-            return text && text.trim().length >= minLength;
+            return typeof text === 'string' && text.trim().length >= minLength;
         },
 
-        /**
-         * Almacena datos en localStorage
-         * @param {string} key - Clave
-         * @param {object} data - Datos a guardar
-         */
         saveToStorage(key, data) {
             try {
                 localStorage.setItem(key, JSON.stringify(data));
             } catch (error) {
-                console.error('Error al guardar en localStorage:', error);
+                console.error('No se pudo guardar en localStorage:', error);
             }
         },
 
-        /**
-         * Obtiene datos de localStorage
-         * @param {string} key - Clave
-         * @returns {object|null} - Datos guardados o null
-         */
         getFromStorage(key) {
             try {
-                const data = localStorage.getItem(key);
-                return data ? JSON.parse(data) : null;
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : null;
             } catch (error) {
-                console.error('Error al leer localStorage:', error);
+                console.error('No se pudo leer localStorage:', error);
                 return null;
             }
+        },
+
+        escapeHTML(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
         }
     };
-
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* MÓDULO: API (Consumo de datos JSON)                             */
-    /* ═══════════════════════════════════════════════════════════════ */
 
     const API = {
-        /**
-         * Carga los productos desde el archivo JSON usando fetch
-         * @returns {Promise<Array>} - Promesa con array de productos
-         */
-        async cargarProductos() {
-            try {
-                const response = await fetch(CONFIG.API_URL);
-                
+        async obtenerFotosUnsplash() {
+            const limpias = [];
+
+            for (const query of CONFIG.UNSPLASH_QUERIES) {
+                if (limpias.length >= CONFIG.UNSPLASH_PER_PAGE) break;
+
+                const url = new URL(CONFIG.UNSPLASH_ENDPOINT);
+                url.searchParams.set('query', query);
+                url.searchParams.set('per_page', String(CONFIG.UNSPLASH_PER_PAGE));
+                url.searchParams.set('orientation', 'landscape');
+                url.searchParams.set('content_filter', 'high');
+
+                const response = await fetch(url.toString(), {
+                    headers: {
+                        Authorization: `Client-ID ${CONFIG.UNSPLASH_ACCESS_KEY}`
+                    }
+                });
+
                 if (!response.ok) {
-                    throw new Error(`Error HTTP: ${response.status}`);
+                    console.warn(`Unsplash respondió con ${response.status} para ${query}`);
+                    continue;
                 }
-                
+
                 const data = await response.json();
-                
-                if (!Array.isArray(data.productos)) {
-                    throw new Error('Formato de JSON inválido');
+                const results = Array.isArray(data.results) ? data.results : [];
+
+                const mapeadas = results.map((photo, index) => ({
+                    id: photo.id || `${query}-${index}`,
+                    imageUrl: photo?.urls?.regular || photo?.urls?.full || photo?.urls?.small || '',
+                    alt: photo?.alt_description || photo?.description || `Fotografía de ${query} ${index + 1}`,
+                    title: photo?.description || photo?.alt_description || `Postre ${index + 1}`,
+                    author: photo?.user?.name || 'Unsplash',
+                    link: photo?.links?.html || '#',
+                    query
+                })).filter(item => item.imageUrl);
+
+                for (const item of mapeadas) {
+                    const existe = limpias.some(existing => existing.id === item.id || existing.imageUrl === item.imageUrl);
+                    if (!existe) {
+                        limpias.push(item);
+                    }
+
+                    if (limpias.length >= CONFIG.UNSPLASH_PER_PAGE) {
+                        break;
+                    }
                 }
-                
-                STATE.products = data.productos;
-                console.log(`✓ Se cargaron ${STATE.products.length} productos`);
-                return STATE.products;
-                
-            } catch (error) {
-                console.error('Error al cargar productos:', error);
-                return [];
             }
+
+            STATE.photos = limpias.slice(0, CONFIG.UNSPLASH_PER_PAGE);
+            return STATE.photos;
         }
     };
 
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* MÓDULO: CARRUSEL                                                */
-    /* ═══════════════════════════════════════════════════════════════ */
-
     const Carousel = {
-        /**
-         * Inicializa el carrusel con los productos
-         */
         inicializar() {
-            if (STATE.products.length === 0) {
-                console.warn('No hay productos para mostrar en el carrusel');
+            if (!STATE.photos.length || !DOM.carouselView) {
                 return;
             }
 
             this.renderizar();
             this.generarIndicadores();
             this.registrarEventos();
-            this.iniciarRotacionAutomatica();
+            this.iniciarRotacion();
         },
 
-        /**
-         * Renderiza el producto actual en el carrusel
-         */
         renderizar() {
-            const product = STATE.products[STATE.currentCarouselIndex];
-            const carouselView = DOM_REFS.carouselView;
+            const item = STATE.photos[STATE.currentCarouselIndex];
+            if (!item || !DOM.carouselView) return;
 
-            if (!product) return;
-
-            carouselView.innerHTML = `
-                <div class="carousel-product" role="region" aria-label="Producto en carrusel: ${product.nombre}">
-                    <div class="carousel-product-image">
-                        <img src="${product.imagen}" alt="${product.nombre}" loading="lazy" onerror="this.style.display='none'">
-                    </div>
+            DOM.carouselView.innerHTML = `
+                <div class="carousel-product" role="region" aria-label="${Utils.escapeHTML(item.title)}">
+                    <figure class="carousel-product-image">
+                        <img src="${item.imageUrl}" alt="${Utils.escapeHTML(item.alt)}" loading="eager" referrerpolicy="no-referrer">
+                    </figure>
                     <div class="carousel-product-info">
-                        <h3>${product.nombre}</h3>
-                        <p>${product.descripcion}</p>
-                        <p class="precio">$${product.precio.toFixed(2)}</p>
+                        <span class="product-category">${Utils.escapeHTML(item.query)}</span>
+                        <h3>${Utils.escapeHTML(item.title)}</h3>
+                        <p>Foto destacada por ${Utils.escapeHTML(item.author)}. La API de Unsplash nos entrega un arreglo de resultados que transformamos a objetos más simples.</p>
+                        <p class="photo-credit"><a href="${item.link}" target="_blank" rel="noreferrer noopener">Ver en Unsplash</a></p>
                     </div>
                 </div>
             `;
@@ -179,90 +151,62 @@
             this.actualizarIndicadores();
         },
 
-        /**
-         * Genera los puntos indicadores del carrusel
-         */
         generarIndicadores() {
-            const container = DOM_REFS.carouselIndicators;
-            container.innerHTML = '';
+            if (!DOM.carouselIndicators) return;
 
-            STATE.products.forEach((_, index) => {
-                const li = document.createElement('li');
-                li.setAttribute('aria-label', `Producto ${index + 1}`);
-                li.addEventListener('click', () => this.ir(index));
-                container.appendChild(li);
+            DOM.carouselIndicators.innerHTML = '';
+            STATE.photos.forEach((_, index) => {
+                const indicator = document.createElement('li');
+                indicator.setAttribute('aria-label', `Ir a la imagen ${index + 1}`);
+                indicator.addEventListener('click', () => this.ir(index));
+                DOM.carouselIndicators.appendChild(indicator);
             });
         },
 
-        /**
-         * Actualiza el estado visual de los indicadores
-         */
         actualizarIndicadores() {
-            const indicators = DOM_REFS.carouselIndicators.querySelectorAll('li');
+            const indicators = DOM.carouselIndicators?.querySelectorAll('li') || [];
             indicators.forEach((indicator, index) => {
                 indicator.classList.toggle('active', index === STATE.currentCarouselIndex);
             });
         },
 
-        /**
-         * Registra eventos de controles del carrusel
-         */
         registrarEventos() {
-            DOM_REFS.prevBtn.addEventListener('click', () => this.anterior());
-            DOM_REFS.nextBtn.addEventListener('click', () => this.siguiente());
-            
-            // Pausar rotación automática al interactuar con el carrusel
-            DOM_REFS.carousel.addEventListener('mouseenter', () => this.pausarRotacion());
-            DOM_REFS.carousel.addEventListener('mouseleave', () => this.iniciarRotacionAutomatica());
+            DOM.prevBtn?.addEventListener('click', () => this.anterior());
+            DOM.nextBtn?.addEventListener('click', () => this.siguiente());
+            DOM.carousel?.addEventListener('mouseenter', () => this.pausarRotacion());
+            DOM.carousel?.addEventListener('mouseleave', () => this.iniciarRotacion());
         },
 
-        /**
-         * Muestra el producto anterior
-         */
         anterior() {
-            STATE.currentCarouselIndex = (STATE.currentCarouselIndex - 1 + STATE.products.length) % STATE.products.length;
+            if (!STATE.photos.length) return;
+            STATE.currentCarouselIndex = (STATE.currentCarouselIndex - 1 + STATE.photos.length) % STATE.photos.length;
             this.renderizar();
             this.reiniciarRotacion();
         },
 
-        /**
-         * Muestra el siguiente producto
-         */
         siguiente() {
-            STATE.currentCarouselIndex = (STATE.currentCarouselIndex + 1) % STATE.products.length;
+            if (!STATE.photos.length) return;
+            STATE.currentCarouselIndex = (STATE.currentCarouselIndex + 1) % STATE.photos.length;
             this.renderizar();
             this.reiniciarRotacion();
         },
 
-        /**
-         * Va a un producto específico
-         * @param {number} index - Índice del producto
-         */
         ir(index) {
-            if (index >= 0 && index < STATE.products.length) {
-                STATE.currentCarouselIndex = index;
-                this.renderizar();
-                this.reiniciarRotacion();
-            }
+            if (index < 0 || index >= STATE.photos.length) return;
+            STATE.currentCarouselIndex = index;
+            this.renderizar();
+            this.reiniciarRotacion();
         },
 
-        /**
-         * Inicia la rotación automática del carrusel (cada 5 segundos)
-         */
-        iniciarRotacionAutomatica() {
-            if (STATE.carouselIntervalId) return;
-            
-            STATE.carouselIntervalId = setInterval(() => {
-                STATE.currentCarouselIndex = (STATE.currentCarouselIndex + 1) % STATE.products.length;
+        iniciarRotacion() {
+            if (STATE.carouselIntervalId || STATE.photos.length < 2) return;
+
+            STATE.carouselIntervalId = window.setInterval(() => {
+                STATE.currentCarouselIndex = (STATE.currentCarouselIndex + 1) % STATE.photos.length;
                 this.renderizar();
             }, CONFIG.CAROUSEL_INTERVAL);
-            
-            console.log('⏱️ Carrusel automático iniciado');
         },
 
-        /**
-         * Pausa la rotación automática
-         */
         pausarRotacion() {
             if (STATE.carouselIntervalId) {
                 clearInterval(STATE.carouselIntervalId);
@@ -270,419 +214,228 @@
             }
         },
 
-        /**
-         * Pausa y reinicia la rotación automática
-         */
         reiniciarRotacion() {
             this.pausarRotacion();
-            this.iniciarRotacionAutomatica();
+            this.iniciarRotacion();
         }
     };
-
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* MÓDULO: VALIDACIÓN DE FORMULARIOS                               */
-    /* ═══════════════════════════════════════════════════════════════ */
 
     const Validador = {
-        /**
-         * Valida el formulario de registro
-         * @param {FormData|Object} datos - Datos del formulario
-         * @returns {Object} - { isValid: boolean, errors: Object }
-         */
         validarRegistro(datos) {
             const errors = {};
-
-            if (!Utils.isValidText(datos.fullName, 3)) {
-                errors.fullName = 'El nombre debe tener al menos 3 caracteres';
-            }
-
-            if (!Utils.isValidEmail(datos.email)) {
-                errors.email = 'Por favor ingresa un email válido';
-            }
-
-            if (!Utils.isValidPassword(datos.password)) {
-                errors.password = 'La contraseña debe tener al menos 8 caracteres';
-            }
-
-            return {
-                isValid: Object.keys(errors).length === 0,
-                errors
-            };
+            if (!Utils.isValidText(datos.fullName, 3)) errors.fullName = 'El nombre debe tener al menos 3 caracteres';
+            if (!Utils.isValidEmail(datos.email)) errors.email = 'Por favor ingresa un email válido';
+            if (!Utils.isValidPassword(datos.password)) errors.password = 'La contraseña debe tener al menos 8 caracteres';
+            return { isValid: Object.keys(errors).length === 0, errors };
         },
 
-        /**
-         * Valida el formulario de login
-         * @param {FormData|Object} datos - Datos del formulario
-         * @returns {Object} - { isValid: boolean, errors: Object }
-         */
         validarLogin(datos) {
             const errors = {};
-
-            if (!Utils.isValidEmail(datos.email)) {
-                errors.email = 'Por favor ingresa un email válido';
-            }
-
-            if (!Utils.isValidPassword(datos.password)) {
-                errors.password = 'La contraseña debe tener al menos 8 caracteres';
-            }
-
-            return {
-                isValid: Object.keys(errors).length === 0,
-                errors
-            };
+            if (!Utils.isValidEmail(datos.email)) errors.email = 'Por favor ingresa un email válido';
+            if (!Utils.isValidPassword(datos.password)) errors.password = 'La contraseña debe tener al menos 8 caracteres';
+            return { isValid: Object.keys(errors).length === 0, errors };
         },
 
-        /**
-         * Valida el formulario de contacto
-         * @param {FormData|Object} datos - Datos del formulario
-         * @returns {Object} - { isValid: boolean, errors: Object }
-         */
         validarContacto(datos) {
             const errors = {};
-
-            if (!Utils.isValidText(datos.name, 3)) {
-                errors.name = 'El nombre debe tener al menos 3 caracteres';
-            }
-
-            if (!Utils.isValidEmail(datos.email)) {
-                errors.email = 'Por favor ingresa un email válido';
-            }
-
-            if (!Utils.isValidText(datos.subject, 5)) {
-                errors.subject = 'El asunto debe tener al menos 5 caracteres';
-            }
-
-            if (!Utils.isValidText(datos.message, 10)) {
-                errors.message = 'El mensaje debe tener al menos 10 caracteres';
-            }
-
-            return {
-                isValid: Object.keys(errors).length === 0,
-                errors
-            };
+            if (!Utils.isValidText(datos.name, 3)) errors.name = 'El nombre debe tener al menos 3 caracteres';
+            if (!Utils.isValidEmail(datos.email)) errors.email = 'Por favor ingresa un email válido';
+            if (!Utils.isValidText(datos.subject, 5)) errors.subject = 'El asunto debe tener al menos 5 caracteres';
+            if (!Utils.isValidText(datos.message, 10)) errors.message = 'El mensaje debe tener al menos 10 caracteres';
+            return { isValid: Object.keys(errors).length === 0, errors };
         }
     };
-
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* MÓDULO: GESTIÓN DE FORMULARIOS                                  */
-    /* ═══════════════════════════════════════════════════════════════ */
 
     const FormManager = {
-        /**
-         * Extrae datos de un formulario
-         * @param {HTMLFormElement} form - Elemento formulario
-         * @returns {Object} - Datos del formulario
-         */
         extraerDatos(form) {
+            const data = {};
             const formData = new FormData(form);
-            const datos = {};
-            
             for (const [key, value] of formData.entries()) {
-                datos[key] = value.trim();
+                data[key] = String(value).trim();
             }
-            
-            return datos;
+            return data;
         },
 
-        /**
-         * Muestra errores en el formulario
-         * @param {HTMLFormElement} form - Elemento formulario
-         * @param {Object} errors - Objeto con errores
-         */
         mostrarErrores(form, errors) {
-            // Limpiar errores previos
-            form.querySelectorAll('.form-error').forEach(el => {
-                el.textContent = '';
-                el.classList.remove('show');
+            form.querySelectorAll('.form-error').forEach(element => {
+                element.textContent = '';
             });
+            form.querySelectorAll('.form-input, .form-textarea').forEach(input => input.classList.remove('error'));
 
-            form.querySelectorAll('.form-input, .form-textarea').forEach(input => {
-                input.classList.remove('error');
-            });
-
-            // Mostrar nuevos errores
-            Object.entries(errors).forEach(([campo, mensaje]) => {
-                const input = form.querySelector(`[name="${campo}"]`);
-                const errorElement = form.querySelector(`#${this.generarIdError(form, campo)}`);
-                
-                if (input) {
-                    input.classList.add('error');
-                }
-                
-                if (errorElement) {
-                    errorElement.textContent = mensaje;
-                    errorElement.classList.add('show');
-                }
+            Object.entries(errors).forEach(([field, message]) => {
+                const input = form.querySelector(`[name="${field}"]`);
+                const errorElement = form.querySelector(`#${this.generarIdError(form, field)}`);
+                input?.classList.add('error');
+                if (errorElement) errorElement.textContent = message;
             });
         },
 
-        /**
-         * Genera el ID del elemento error
-         * @param {HTMLFormElement} form - Elemento formulario
-         * @param {string} campo - Nombre del campo
-         * @returns {string} - ID del elemento error
-         */
-        generarIdError(form, campo) {
-            const prefix = form.id.replace('-form', '');
-            return `${prefix}-${campo}-error`;
+        generarIdError(form, field) {
+            return `${form.id.replace('-form', '')}-${field}-error`;
         },
 
-        /**
-         * Limpia los errores del formulario
-         * @param {HTMLFormElement} form - Elemento formulario
-         */
         limpiarErrores(form) {
-            form.querySelectorAll('.form-error').forEach(el => {
-                el.textContent = '';
-                el.classList.remove('show');
-            });
-
-            form.querySelectorAll('.form-input, .form-textarea').forEach(input => {
-                input.classList.remove('error');
-            });
+            form.querySelectorAll('.form-error').forEach(element => (element.textContent = ''));
+            form.querySelectorAll('.form-input, .form-textarea').forEach(input => input.classList.remove('error'));
         },
 
-        /**
-         * Muestra un mensaje de éxito
-         * @param {HTMLFormElement} form - Elemento formulario
-         * @param {string} mensaje - Mensaje a mostrar
-         */
-        mostrarExito(form, mensaje) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'success-message';
-            messageDiv.setAttribute('role', 'alert');
-            messageDiv.textContent = mensaje;
-            
-            form.insertAdjacentElement('beforebegin', messageDiv);
-            
-            setTimeout(() => {
-                messageDiv.remove();
-            }, 5000);
+        mostrarExito(form, message) {
+            const banner = document.createElement('div');
+            banner.className = 'success-message';
+            banner.setAttribute('role', 'alert');
+            banner.textContent = message;
+            form.insertAdjacentElement('beforebegin', banner);
+            window.setTimeout(() => banner.remove(), 5000);
         }
     };
 
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* MÓDULO: RENDERIZADO DE PRODUCTOS                                */
-    /* ═══════════════════════════════════════════════════════════════ */
-
-    const ProductRenderer = {
-        /**
-         * Renderiza la grid de productos
-         */
+    const PhotoRenderer = {
         renderizar() {
-            const container = DOM_REFS.productList;
-            container.innerHTML = '';
+            if (!DOM.productList) return;
 
-            if (STATE.products.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--color-text-muted);">No hay productos disponibles</p>';
-                return;
-            }
+            DOM.productList.innerHTML = '';
 
-            STATE.products.forEach(product => {
-                const card = this.crearTarjeta(product);
-                container.appendChild(card);
+            STATE.photos.forEach(photo => {
+                const card = document.createElement('article');
+                card.className = 'product-card';
+                card.setAttribute('aria-label', photo.title);
+                card.innerHTML = `
+                    <div class="product-image">
+                        <img src="${photo.imageUrl}" alt="${Utils.escapeHTML(photo.alt)}" loading="lazy" referrerpolicy="no-referrer">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">${Utils.escapeHTML(photo.title)}</h3>
+                        <span class="product-category">${Utils.escapeHTML(photo.query)}</span>
+                        <p class="product-description">Fotografía de ${Utils.escapeHTML(photo.author)} tomada desde Unsplash y reutilizada en una interfaz de repostería.</p>
+                        <p class="photo-credit"><a href="${photo.link}" target="_blank" rel="noreferrer noopener">Crédito Unsplash</a></p>
+                    </div>
+                `;
+                DOM.productList.appendChild(card);
             });
-        },
-
-        /**
-         * Crea una tarjeta de producto
-         * @param {Object} product - Datos del producto
-         * @returns {HTMLElement} - Elemento tarjeta
-         */
-        crearTarjeta(product) {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.setAttribute('role', 'article');
-            card.setAttribute('aria-labelledby', `product-name-${product.id}`);
-
-            card.innerHTML = `
-                <div class="product-image">
-                    <img src="${product.imagen}" alt="${product.nombre}" loading="lazy">
-                </div>
-                <div class="product-info">
-                    <h3 id="product-name-${product.id}" class="product-name">${product.nombre}</h3>
-                    <span class="product-category">${product.categoria}</span>
-                    <p class="product-description">${product.descripcion}</p>
-                    <p class="product-price">$${product.precio.toFixed(2)}</p>
-                    <p class="product-available">${product.disponible ? '✓ Disponible' : '✗ Agotado'}</p>
-                </div>
-            `;
-
-            return card;
         }
     };
-
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* MÓDULO: INICIALIZACIÓN                                          */
-    /* ═══════════════════════════════════════════════════════════════ */
 
     const Inicializador = {
-        /**
-         * Obtiene referencias a elementos del DOM
-         */
         obtenerReferencias() {
-            DOM_REFS.carouselView = document.getElementById('carousel-view');
-            DOM_REFS.carousel = document.getElementById('carousel');
-            DOM_REFS.carouselIndicators = document.getElementById('carousel-indicators');
-            DOM_REFS.prevBtn = document.getElementById('prev-btn');
-            DOM_REFS.nextBtn = document.getElementById('next-btn');
-            DOM_REFS.productList = document.getElementById('product-list');
+            DOM.carouselView = document.getElementById('carousel-view');
+            DOM.carousel = document.getElementById('carousel');
+            DOM.carouselIndicators = document.getElementById('carousel-indicators');
+            DOM.prevBtn = document.getElementById('prev-btn');
+            DOM.nextBtn = document.getElementById('next-btn');
+            DOM.productList = document.getElementById('product-list');
+            DOM.status = document.getElementById('api-status');
 
-            DOM_REFS.registerForm = document.getElementById('register-form');
-            DOM_REFS.loginForm = document.getElementById('login-form');
-            DOM_REFS.contactForm = document.getElementById('contact-form');
+            DOM.registerForm = document.getElementById('register-form');
+            DOM.loginForm = document.getElementById('login-form');
+            DOM.contactForm = document.getElementById('contact-form');
         },
 
-        /**
-         * Registra los eventos de los formularios
-         */
         registrarEventosFormularios() {
-            // Formulario de Registro
-            if (DOM_REFS.registerForm) {
-                DOM_REFS.registerForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.manejarRegistro();
+            const attach = (form, handler) => {
+                if (!form) return;
+                form.addEventListener('submit', event => {
+                    event.preventDefault();
+                    handler();
                 });
+                form.querySelectorAll('input, textarea').forEach(field => {
+                    field.addEventListener('input', () => FormManager.limpiarErrores(form));
+                });
+            };
 
-                // Limpiar errores al escribir
-                DOM_REFS.registerForm.querySelectorAll('input').forEach(input => {
-                    input.addEventListener('input', () => {
-                        FormManager.limpiarErrores(DOM_REFS.registerForm);
-                    });
-                });
-            }
-
-            // Formulario de Login
-            if (DOM_REFS.loginForm) {
-                DOM_REFS.loginForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.manejarLogin();
-                });
-
-                DOM_REFS.loginForm.querySelectorAll('input').forEach(input => {
-                    input.addEventListener('input', () => {
-                        FormManager.limpiarErrores(DOM_REFS.loginForm);
-                    });
-                });
-            }
-
-            // Formulario de Contacto
-            if (DOM_REFS.contactForm) {
-                DOM_REFS.contactForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.manejarContacto();
-                });
-
-                DOM_REFS.contactForm.querySelectorAll('input, textarea').forEach(field => {
-                    field.addEventListener('input', () => {
-                        FormManager.limpiarErrores(DOM_REFS.contactForm);
-                    });
-                });
-            }
+            attach(DOM.registerForm, () => this.manejarRegistro());
+            attach(DOM.loginForm, () => this.manejarLogin());
+            attach(DOM.contactForm, () => this.manejarContacto());
         },
 
-        /**
-         * Maneja el envío del formulario de registro
-         */
-        manejarRegistro() {
-            const datos = FormManager.extraerDatos(DOM_REFS.registerForm);
-            const validacion = Validador.validarRegistro(datos);
+        setStatus(message, isError = false) {
+            if (!DOM.status) return;
+            DOM.status.textContent = message;
+            DOM.status.classList.toggle('status-message--error', isError);
+        },
 
+        manejarRegistro() {
+            const datos = FormManager.extraerDatos(DOM.registerForm);
+            const validacion = Validador.validarRegistro(datos);
             if (!validacion.isValid) {
-                FormManager.mostrarErrores(DOM_REFS.registerForm, validacion.errors);
+                FormManager.mostrarErrores(DOM.registerForm, validacion.errors);
                 return;
             }
 
             STATE.formSubmissions.registrations.push(datos);
             Utils.saveToStorage(CONFIG.FORM_STORAGE_KEY, STATE.formSubmissions);
-
-            FormManager.mostrarExito(DOM_REFS.registerForm, '✓ ¡Registro completado exitosamente!');
-            DOM_REFS.registerForm.reset();
-
-            console.log('Nuevo registro:', datos);
+            FormManager.mostrarExito(DOM.registerForm, '✓ ¡Registro completado exitosamente!');
+            DOM.registerForm.reset();
         },
 
-        /**
-         * Maneja el envío del formulario de login
-         */
         manejarLogin() {
-            const datos = FormManager.extraerDatos(DOM_REFS.loginForm);
+            const datos = FormManager.extraerDatos(DOM.loginForm);
             const validacion = Validador.validarLogin(datos);
-
             if (!validacion.isValid) {
-                FormManager.mostrarErrores(DOM_REFS.loginForm, validacion.errors);
+                FormManager.mostrarErrores(DOM.loginForm, validacion.errors);
                 return;
             }
 
             STATE.formSubmissions.logins.push(datos);
             Utils.saveToStorage(CONFIG.FORM_STORAGE_KEY, STATE.formSubmissions);
-
-            FormManager.mostrarExito(DOM_REFS.loginForm, '✓ ¡Sesión iniciada exitosamente!');
-            DOM_REFS.loginForm.reset();
-
-            console.log('Nuevo login:', datos);
+            FormManager.mostrarExito(DOM.loginForm, '✓ ¡Sesión iniciada exitosamente!');
+            DOM.loginForm.reset();
         },
 
-        /**
-         * Maneja el envío del formulario de contacto
-         */
         manejarContacto() {
-            const datos = FormManager.extraerDatos(DOM_REFS.contactForm);
+            const datos = FormManager.extraerDatos(DOM.contactForm);
             const validacion = Validador.validarContacto(datos);
-
             if (!validacion.isValid) {
-                FormManager.mostrarErrores(DOM_REFS.contactForm, validacion.errors);
+                FormManager.mostrarErrores(DOM.contactForm, validacion.errors);
                 return;
             }
 
             STATE.formSubmissions.contacts.push(datos);
             Utils.saveToStorage(CONFIG.FORM_STORAGE_KEY, STATE.formSubmissions);
-
-            FormManager.mostrarExito(DOM_REFS.contactForm, '✓ ¡Mensaje enviado exitosamente! Nos pondremos en contacto pronto.');
-            DOM_REFS.contactForm.reset();
-
-            console.log('Nuevo contacto:', datos);
+            FormManager.mostrarExito(DOM.contactForm, '✓ ¡Mensaje enviado exitosamente! Nos pondremos en contacto pronto.');
+            DOM.contactForm.reset();
         },
 
-        /**
-         * Inicializa la aplicación completa
-         */
         async iniciar() {
-            console.log('🍰 Inicializando Capricho Dulce...');
-
             this.obtenerReferencias();
             this.registrarEventosFormularios();
 
+            const guardado = Utils.getFromStorage(CONFIG.FORM_STORAGE_KEY);
+            if (guardado) {
+                STATE.formSubmissions = {
+                    registrations: Array.isArray(guardado.registrations) ? guardado.registrations : [],
+                    logins: Array.isArray(guardado.logins) ? guardado.logins : [],
+                    contacts: Array.isArray(guardado.contacts) ? guardado.contacts : []
+                };
+            }
+
             try {
-                // Cargar productos desde JSON
-                await API.cargarProductos();
+                this.setStatus('Cargando fotografías desde Unsplash...');
+                await API.obtenerFotosUnsplash();
 
-                // Renderizar productos en grid
-                if (DOM_REFS.productList) {
-                    ProductRenderer.renderizar();
+                if (!STATE.photos.length) {
+                    this.setStatus('No se pudieron cargar imágenes desde Unsplash.', true);
+                    if (DOM.carouselView) {
+                        DOM.carouselView.innerHTML = '<p class="status-message status-message--error">No se pudieron cargar imágenes desde Unsplash.</p>';
+                    }
+                    return;
                 }
 
-                // Inicializar carrusel
-                if (DOM_REFS.carousel) {
-                    Carousel.inicializar();
-                }
-
-                console.log('✓ Aplicación lista');
+                PhotoRenderer.renderizar();
+                Carousel.inicializar();
+                this.setStatus(`Se cargaron ${STATE.photos.length} imágenes de Unsplash.`);
             } catch (error) {
-                console.error('Error durante la inicialización:', error);
+                console.error('Error al iniciar la app:', error);
+                this.setStatus('Error al consumir la API de Unsplash.', true);
+                if (DOM.carouselView) {
+                    DOM.carouselView.innerHTML = '<p class="status-message status-message--error">Error al consumir la API de Unsplash.</p>';
+                }
             }
         }
     };
 
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* PUNTO DE ENTRADA                                                */
-    /* ═══════════════════════════════════════════════════════════════ */
-
-    // Esperar a que el DOM esté completamente cargado
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => Inicializador.iniciar());
     } else {
         Inicializador.iniciar();
     }
-
 })();
