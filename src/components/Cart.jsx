@@ -1,7 +1,8 @@
 import React from 'react'
+import { formatCLP } from '../utils'
 
 export default function Cart({ cart = [], onClear = () => {} }) {
-  const total = cart.reduce((sum, it) => sum + it.precio * (it.cantidad || 1), 0)
+  const total = cart.reduce((sum, it) => sum + (it.precio || 0) * (it.cantidad || 1), 0)
 
   return (
     <aside id="carro" className="cart-panel panel" aria-labelledby="carro-title">
@@ -15,14 +16,14 @@ export default function Cart({ cart = [], onClear = () => {} }) {
         ) : (
           cart.map(item => (
             <article key={item.id} className="cart-item">
-              <img className="cart-item-image" src={item.imagen} alt={item.nombre} loading="lazy" />
+              <img className="cart-item-image" src={item.imagen || item.imageUrl} alt={item.nombre} loading="lazy" />
               <div className="cart-item-info">
                 <h4>{item.nombre}</h4>
                 <p>{item.descripcion}</p>
                 <span className="cart-item-qty">Cantidad: {item.cantidad || 1}</span>
               </div>
               <div className="cart-item-meta">
-                <strong>${item.precio * (item.cantidad || 1)}</strong>
+                <strong>{formatCLP((item.precio || 0) * (item.cantidad || 1))}</strong>
               </div>
             </article>
           ))
@@ -30,7 +31,7 @@ export default function Cart({ cart = [], onClear = () => {} }) {
       </div>
       <div className="cart-summary">
         <p>Total a pagar</p>
-        <strong id="cart-total" className="cart-total">${total}</strong>
+        <strong id="cart-total" className="cart-total">{formatCLP(total)}</strong>
       </div>
       <button type="button" id="clear-cart-btn" className="form-submit form-submit--secondary" onClick={onClear}>Vaciar carrito</button>
     </aside>
