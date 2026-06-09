@@ -7,6 +7,7 @@ const ADDRESS_KEY = 'capricho_dulce_address'
 export default function Account({ onOrder = () => {}, cartCount = 0 }) {
   const [status, setStatus] = useState('Ingresa tu dirección para completar el pedido.')
   const [shipping, setShipping] = useState('')
+  const [errors, setErrors] = useState({})
 
   useEffect(() => {
     try {
@@ -22,12 +23,18 @@ export default function Account({ onOrder = () => {}, cartCount = 0 }) {
   }, [])
 
   function saveAddress() {
+    const fieldErrors = {}
     if (!isValidText(shipping, 10)) {
-      setStatus('Ingresa una dirección válida de envío.')
+      fieldErrors.shippingAddress = 'Ingresa una dirección válida de envío.'
+    }
+    setErrors(prev => ({ ...prev, ...fieldErrors }))
+    if (Object.keys(fieldErrors).length) {
+      setStatus(Object.values(fieldErrors)[0])
       return false
     }
     localStorage.setItem(ADDRESS_KEY, shipping)
     setStatus('Dirección guardada correctamente.')
+    setErrors(prev => ({ ...prev, shippingAddress: '' }))
     return true
   }
 
@@ -49,12 +56,13 @@ export default function Account({ onOrder = () => {}, cartCount = 0 }) {
     const fullName = form.fullName?.value || ''
     const email = form.email?.value || ''
     const password = form.password?.value || ''
-    const errors = {}
-    if (!isValidText(fullName, 3)) errors.fullName = 'El nombre debe tener al menos 3 caracteres'
-    if (!isValidEmail(email)) errors.email = 'Por favor ingresa un email válido'
-    if (!isValidPassword(password)) errors.password = 'La contraseña debe tener al menos 8 caracteres'
-    if (Object.keys(errors).length) {
-      setStatus(Object.values(errors)[0])
+    const fieldErrors = {}
+    if (!isValidText(fullName, 3)) fieldErrors.fullName = 'El nombre debe tener al menos 3 caracteres'
+    if (!isValidEmail(email)) fieldErrors.email = 'Por favor ingresa un email válido'
+    if (!isValidPassword(password)) fieldErrors.password = 'La contraseña debe tener al menos 8 caracteres'
+    setErrors(prev => ({ ...prev, ...fieldErrors }))
+    if (Object.keys(fieldErrors).length) {
+      setStatus(Object.values(fieldErrors)[0])
       return
     }
     const stored = JSON.parse(localStorage.getItem(FORM_KEY) || '{}')
@@ -62,6 +70,7 @@ export default function Account({ onOrder = () => {}, cartCount = 0 }) {
     stored.registrations.push({ fullName, email })
     localStorage.setItem(FORM_KEY, JSON.stringify(stored))
     setStatus('✓ ¡Registro completado exitosamente!')
+    setErrors(prev => ({ ...prev, fullName: '', email: '', password: '' }))
     form.reset()
   }
 
@@ -70,8 +79,12 @@ export default function Account({ onOrder = () => {}, cartCount = 0 }) {
     const form = e.target
     const email = form.email?.value || ''
     const password = form.password?.value || ''
-    if (!isValidEmail(email) || !isValidPassword(password)) {
-      setStatus('Credenciales inválidas')
+    const fieldErrors = {}
+    if (!isValidEmail(email)) fieldErrors.loginEmail = 'Por favor ingresa un email válido'
+    if (!isValidPassword(password)) fieldErrors.loginPassword = 'La contraseña debe tener al menos 8 caracteres'
+    setErrors(prev => ({ ...prev, ...fieldErrors }))
+    if (Object.keys(fieldErrors).length) {
+      setStatus(Object.values(fieldErrors)[0])
       return
     }
     const stored = JSON.parse(localStorage.getItem(FORM_KEY) || '{}')
@@ -79,6 +92,7 @@ export default function Account({ onOrder = () => {}, cartCount = 0 }) {
     stored.logins.push({ email })
     localStorage.setItem(FORM_KEY, JSON.stringify(stored))
     setStatus('✓ ¡Sesión iniciada exitosamente!')
+    setErrors(prev => ({ ...prev, loginEmail: '', loginPassword: '' }))
     form.reset()
   }
 
@@ -89,8 +103,14 @@ export default function Account({ onOrder = () => {}, cartCount = 0 }) {
     const email = form.email?.value || ''
     const subject = form.subject?.value || ''
     const message = form.message?.value || ''
-    if (!isValidText(name, 3) || !isValidEmail(email) || !isValidText(subject, 5) || !isValidText(message, 10)) {
-      setStatus('Completa correctamente el formulario de contacto.')
+    const fieldErrors = {}
+    if (!isValidText(name, 3)) fieldErrors.contactName = 'El nombre debe tener al menos 3 caracteres'
+    if (!isValidEmail(email)) fieldErrors.contactEmail = 'Por favor ingresa un email válido'
+    if (!isValidText(subject, 5)) fieldErrors.contactSubject = 'El asunto debe tener al menos 5 caracteres'
+    if (!isValidText(message, 10)) fieldErrors.contactMessage = 'El mensaje debe tener al menos 10 caracteres'
+    setErrors(prev => ({ ...prev, ...fieldErrors }))
+    if (Object.keys(fieldErrors).length) {
+      setStatus(Object.values(fieldErrors)[0])
       return
     }
     const stored = JSON.parse(localStorage.getItem(FORM_KEY) || '{}')
@@ -98,6 +118,7 @@ export default function Account({ onOrder = () => {}, cartCount = 0 }) {
     stored.contacts.push({ name, email, subject, message })
     localStorage.setItem(FORM_KEY, JSON.stringify(stored))
     setStatus('✓ ¡Mensaje enviado exitosamente!')
+    setErrors(prev => ({ ...prev, contactName: '', contactEmail: '', contactSubject: '', contactMessage: '' }))
     form.reset()
   }
 
