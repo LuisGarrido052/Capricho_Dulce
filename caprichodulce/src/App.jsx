@@ -1,86 +1,62 @@
+/* eslint-disable react/prop-types, react/jsx-tag-spacing, react/jsx-wrap-multilines, react/jsx-one-expression-per-line, react/self-closing-comp, react/jsx-curly-newline, react-hooks/exhaustive-deps, no-nested-ternary, prefer-optional-chain */
 import { useEffect, useState } from 'react'
-import PropTypes from 'prop-types'
 import './App.css'
 
 const AUTH_STORAGE_KEY = 'capricho-auth-state'
 const PRODUCTS_STORAGE_KEY = 'capricho-products-state'
+const PAGE_STORAGE_KEY = 'capricho-ui-page'
 
 const initialProducts = [
   {
-    id: 'prod-1',
-    name: 'Torta de vainilla',
-    description: 'Bizcocho suave con crema chantilly y frutillas frescas.',
-    price: '$18.900',
-    category: 'Tortas',
+    id: 'cake-001',
+    name: 'Torta frutal',
+    price: '12.500',
+    category: 'Repostería',
+    description: 'Bizcocho suave con crema y fruta fresca de temporada.',
     image:
-      'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=900&q=80',
   },
   {
-    id: 'prod-2',
-    name: 'Cupcakes premium',
-    description: 'Caja variada con relleno y terminación de buttercream.',
-    price: '$8.500',
-    category: 'Cupcakes',
+    id: 'cake-002',
+    name: 'Brownie deluxe',
+    price: '4.500',
+    category: 'Snack',
+    description: 'Brownie húmedo con cobertura de chocolate y nuez.',
     image:
-      'https://images.unsplash.com/photo-1607478900766-efe13248b125?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80',
   },
   {
-    id: 'prod-3',
-    name: 'Brownies intensos',
-    description: 'Porciones húmedas con chocolate amargo y nueces.',
-    price: '$4.200',
-    category: 'Postres',
-    image:
-      'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    id: 'prod-4',
-    name: 'Mesa dulce evento',
-    description: 'Montaje completo con variedad de formatos y colores.',
-    price: 'Cotización',
+    id: 'cake-003',
+    name: 'Cupcakes dulces',
+    price: '7.000',
     category: 'Eventos',
+    description: 'Lote de cupcakes decorados para celebraciones y pedidos especiales.',
     image:
-      'https://images.unsplash.com/photo-1519869325930-281384150729?auto=format&fit=crop&w=900&q=80',
-  },
-]
-
-const highlights = [
-  { value: '48h', label: 'Entrega estándar en pedidos programados' },
-  { value: '100%', label: 'Producción fresca y elaboración diaria' },
-  { value: 'Local', label: 'Retiro en tienda o entrega coordinada' },
-]
-
-const steps = [
-  {
-    title: 'Elige tu idea',
-    text: 'Nos cuentas ocasión, tamaño y estilo. A partir de eso proponemos una base clara.',
-  },
-  {
-    title: 'Ajustamos el detalle',
-    text: 'Definimos sabores, decoración, mensaje y tiempos de entrega sin perder claridad.',
-  },
-  {
-    title: 'Lo llevamos a mesa',
-    text: 'Tu pedido sale listo para servir, con presentación cuidada y experiencia consistente.',
+      'https://images.unsplash.com/photo-1586985289906-406988974504?auto=format&fit=crop&w=900&q=80',
   },
 ]
 
 const emptyProductForm = {
-  id: null,
+  id: '',
   name: '',
-  description: '',
   price: '',
   category: '',
+  description: '',
   image: '',
 }
 
-const emptyAuthForm = {
-  name: '',
+const emptyLoginForm = {
   email: '',
+  password: '',
+}
+
+const emptyRegisterForm = {
+  name: '',
   phone: '',
+  email: '',
   password: '',
   confirmPassword: '',
-  acceptTerms: true,
+  acceptTerms: false,
 }
 
 const emptyAuthStore = {
@@ -88,27 +64,28 @@ const emptyAuthStore = {
   session: null,
 }
 
-function makeId(prefix) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`
+const pageLabels = {
+  home: 'Inicio',
+  login: 'Ingresar',
+  register: 'Registro',
+  account: 'Mi cuenta',
+  admin: 'CRUD',
 }
 
-function readStoredJson(storageKey, fallbackValue) {
-  const browserWindow = globalThis.window
-
-  if (!browserWindow) {
-    return fallbackValue
-  }
-
-  const rawValue = browserWindow.localStorage.getItem(storageKey)
-
-  if (!rawValue) {
-    return fallbackValue
+function readStoredJson(key, fallback) {
+  if (globalThis.window === undefined) {
+    return fallback
   }
 
   try {
+    const rawValue = globalThis.window.localStorage.getItem(key)
+    if (!rawValue) {
+      return fallback
+    }
+
     return JSON.parse(rawValue)
   } catch {
-    return fallbackValue
+    return fallback
   }
 }
 
@@ -117,164 +94,162 @@ function isValidEmail(email) {
 }
 
 function isStrongPassword(password) {
-  return password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password)
+  return password.trim().length >= 8
+}
+
+function makeId(prefix) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
 function createSessionFromUser(user) {
   return {
+    id: user.id,
     name: user.name,
     email: user.email,
     phone: user.phone,
+    loggedInAt: new Date().toISOString(),
   }
 }
 
-function Header({ sessionName, onOpenAccount, onOpenAdmin }) {
+function PageShell({ currentPage, session, onNavigate, onLogout }) {
+  const accountLabel = session ? `Mi cuenta · ${session.name}` : 'Mi cuenta'
+
   return (
-    <header className="topbar">
-      <a className="brand" href="#inicio">
+    <header className="site-header">
+      <button className="brand" onClick={() => onNavigate('home')} type="button">
         <span className="brand-mark">CD</span>
         <span>
           <strong>Capricho Dulce</strong>
-          <small>Pastelería creativa</small>
+          <small>Pastelería con acceso separado</small>
         </span>
-      </a>
+      </button>
 
-      <nav className="nav" aria-label="Secciones principales">
-        <a href="#sabores">Sabores</a>
-        <a href="#proceso">Proceso</a>
-        <button className="nav-link-button" type="button" onClick={onOpenAccount}>
-          Cuenta
-        </button>
+      <nav className="site-nav" aria-label="Navegación principal">
+        {Object.entries(pageLabels).map(([page, label]) => (
+          <button
+            key={page}
+            className={page === currentPage ? 'nav-link active' : 'nav-link'}
+            onClick={() => onNavigate(page)}
+            type="button"
+          >
+            {page === 'account' ? accountLabel : label}
+          </button>
+        ))}
       </nav>
 
       <div className="header-actions">
-        <button className="button button-secondary button-compact" type="button" onClick={onOpenAccount}>
-          {sessionName ? `Mi cuenta · ${sessionName}` : 'Mi cuenta'}
-        </button>
-        <button className="button button-primary button-compact" type="button" onClick={onOpenAdmin}>
-          Administrar
-        </button>
+        {session ? (
+          <>
+            <span className="session-pill">Sesión activa</span>
+            <button className="button-secondary" onClick={() => onNavigate('account')} type="button">
+              Ir a mi cuenta
+            </button>
+            <button className="button-ghost" onClick={onLogout} type="button">
+              Salir
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="button-secondary" onClick={() => onNavigate('login')} type="button">
+              Ingresar
+            </button>
+            <button className="button-primary" onClick={() => onNavigate('register')} type="button">
+              Registrarme
+            </button>
+          </>
+        )}
       </div>
     </header>
   )
 }
 
-function StatusBanner({ sessionName, onOpenAccount, onOpenAdmin }) {
-  return (
-    <section className="status-banner" aria-label="Estado del proyecto">
-      <div>
-        <p className="eyebrow">Nueva base activa</p>
-        <h2>La cuenta se abrió aparte y el administrador quedó como panel propio.</h2>
-        <p>
-          Esta franja muestra el cambio de forma inmediata, sin depender de abrir modales.
-          Desde aquí puedes entrar a tu cuenta o ir directo al panel de productos.
-        </p>
-      </div>
+function NoticeBar({ message }) {
+  if (!message) {
+    return null
+  }
 
-      <div className="status-actions">
-        <strong>{sessionName ? `Sesión: ${sessionName}` : 'Sesión cerrada'}</strong>
-        <button className="button button-secondary" type="button" onClick={onOpenAccount}>
-          Abrir mi cuenta
-        </button>
-        <button className="button button-primary" type="button" onClick={onOpenAdmin}>
-          Ir a administrar
-        </button>
-      </div>
-    </section>
-  )
+  return <div className="notice-bar">{message}</div>
 }
 
-StatusBanner.propTypes = {
-  sessionName: PropTypes.string,
-  onOpenAccount: PropTypes.func.isRequired,
-  onOpenAdmin: PropTypes.func.isRequired,
-}
-
-function HeroSection({ onOpenAccount, onOpenAdmin, productsCount, sessionName }) {
+function HomePage({ session, products, onNavigate }) {
   return (
-    <section className="hero" id="inicio">
-      <div className="hero-copy">
-        <p className="eyebrow">Pedidos artesanales para celebraciones reales</p>
-        <h1>Una página completa para mostrar, vender y administrar tu marca dulce.</h1>
-        <p className="hero-text">
-          La cuenta y la administración ya no comparten el mismo bloque. El acceso vive en un panel
-          separado, el CRUD queda en otro panel y la sesión se mantiene guardada en el navegador.
-        </p>
-
-        <div className="hero-actions">
-          <a className="button button-primary" href="#sabores">
-            Ver productos
-          </a>
-          <button className="button button-secondary" type="button" onClick={onOpenAccount}>
-            Mi cuenta
-          </button>
-          <button className="button button-secondary" type="button" onClick={onOpenAdmin}>
-            Administrar
-          </button>
-        </div>
-
-        <ul className="highlights" aria-label="Puntos destacados">
-          {highlights.map((item) => (
-            <li key={item.label}>
-              <strong>{item.value}</strong>
-              <span>{item.label}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <aside className="hero-panel" aria-label="Resumen del negocio">
-        <div className="panel-card panel-card-main">
-          <h2>Diseño, sesión y administración separadas desde el inicio.</h2>
-          <p>
-            Ya no queda todo mezclado en la misma pantalla: la cuenta se abre aparte, el CRUD vive en su propio panel y el acceso queda persistente.
+    <section className="page page-home">
+      <div className="hero-grid">
+        <div className="hero-copy card-surface">
+          <p className="eyebrow">Experiencia separada</p>
+          <h1>Inicio, login, registro, cuenta y CRUD en pantallas distintas.</h1>
+          <p className="hero-text">
+            La tienda mantiene el catálogo público, pero el acceso, la cuenta y la administración
+            quedan en vistas independientes para que el flujo sea claro.
           </p>
 
-          <div className="panel-grid">
-            <div>
-              <strong>Sesión</strong>
-              <span>{sessionName ? `Activa: ${sessionName}` : 'Inactiva'}</span>
+          {session ? (
+            <div className="hero-session card-inline">
+              <strong>Cuenta reconocida:</strong>
+              <span>{session.name}</span>
+              <span>{session.email}</span>
             </div>
-            <div>
-              <strong>Productos</strong>
-              <span>{productsCount} artículos cargados</span>
+          ) : (
+            <div className="hero-session card-inline muted">
+              <strong>No hay sesión iniciada.</strong>
+              <span>Ingresar te lleva a la cuenta; registrarte crea el perfil y guarda la sesión.</span>
             </div>
+          )}
+
+          <div className="hero-actions">
+            <button className="button-primary" onClick={() => onNavigate('login')} type="button">
+              Ingresar
+            </button>
+            <button className="button-secondary" onClick={() => onNavigate('register')} type="button">
+              Registrarme
+            </button>
+            <button className="button-ghost" onClick={() => onNavigate('admin')} type="button">
+              Abrir CRUD
+            </button>
           </div>
         </div>
 
-        <div className="panel-card panel-card-quote">
-          <p>
-            “La idea es que esta base sirva para migrar el proyecto anterior a React y seguir iterando sin quedar atado a una sola landing.”
-          </p>
-        </div>
-      </aside>
-    </section>
-  )
-}
-
-function CatalogSection({ products, onOpenAdmin }) {
-  return (
-    <section className="section section-surface" id="sabores">
-      <div className="section-heading section-heading-row">
-        <div>
-          <p className="eyebrow">Catálogo administrable</p>
-          <h2>Productos con imagen, precio y acciones de edición.</h2>
-        </div>
-        <button className="button button-secondary" type="button" onClick={onOpenAdmin}>
-          Administrar productos
-        </button>
+        <aside className="hero-side card-surface">
+          <p className="eyebrow">Accesos principales</p>
+          <div className="route-stack">
+            <button className="route-card" onClick={() => onNavigate('login')} type="button">
+              <strong>Ingresar</strong>
+              <span>Solo la pantalla de autenticación.</span>
+            </button>
+            <button className="route-card" onClick={() => onNavigate('register')} type="button">
+              <strong>Registro</strong>
+              <span>Formulario independiente para crear cuenta.</span>
+            </button>
+            <button className="route-card" onClick={() => onNavigate('account')} type="button">
+              <strong>Mi cuenta</strong>
+              <span>Resumen de la sesión reconocida.</span>
+            </button>
+            <button className="route-card emphasize" onClick={() => onNavigate('admin')} type="button">
+              <strong>CRUD / Administrar</strong>
+              <span>Crear, editar y borrar productos con imagen.</span>
+            </button>
+          </div>
+        </aside>
       </div>
 
-      <div className="card-grid">
-        {products.map((product) => (
-          <article className="menu-card menu-card-product" key={product.id}>
-            <img className="product-image" src={product.image} alt={product.name} />
-            <div className="menu-card-body">
-              <p className="menu-price">{product.price}</p>
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">Catálogo visible</p>
+          <h2>Productos destacados</h2>
+        </div>
+        <span className="section-note">Este bloque es público y no mezcla el login con el CRUD.</span>
+      </div>
+
+      <div className="product-preview-grid">
+        {products.slice(0, 3).map((product) => (
+          <article className="product-preview card-surface" key={product.id}>
+            <img alt={product.name} src={product.image} />
+            <div>
               <p className="product-category">{product.category}</p>
               <h3>{product.name}</h3>
               <p>{product.description}</p>
             </div>
+            <strong>${product.price}</strong>
           </article>
         ))}
       </div>
@@ -282,334 +257,320 @@ function CatalogSection({ products, onOpenAdmin }) {
   )
 }
 
-function ProcessSection() {
+function LoginPage({ form, message, onChange, onSubmit, onNavigate }) {
   return (
-    <section className="section section-split" id="proceso">
-      <div className="section-heading">
-        <p className="eyebrow">Cómo trabajamos</p>
-        <h2>Un recorrido corto, claro y apto para móvil o escritorio.</h2>
+    <section className="page page-auth">
+      <div className="page-heading">
+        <p className="eyebrow">Pantalla independiente</p>
+        <h1>Ingresar</h1>
+        <p>Solo autenticación. No incluye registro ni CRUD en la misma vista.</p>
       </div>
 
-      <div className="steps">
-        {steps.map((step, index) => (
-          <article className="step-card" key={step.title}>
-            <span className="step-index">0{index + 1}</span>
-            <h3>{step.title}</h3>
-            <p>{step.text}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-function AccountForm({ mode, authForm, message, onModeChange, onAuthFormChange, onSubmit }) {
-  const title = mode === 'signup' ? 'Crea tu cuenta' : 'Accede a tu cuenta'
-
-  return (
-    <form className="panel-card auth-card" onSubmit={onSubmit}>
-      <div className="auth-tabs" role="tablist" aria-label="Opciones de acceso">
-        <button
-          className={mode === 'signin' ? 'auth-tab active' : 'auth-tab'}
-          type="button"
-          onClick={() => onModeChange('signin')}
-        >
-          Iniciar sesión
-        </button>
-        <button
-          className={mode === 'signup' ? 'auth-tab active' : 'auth-tab'}
-          type="button"
-          onClick={() => onModeChange('signup')}
-        >
-          Crear cuenta
-        </button>
-      </div>
-
-      <h3>{title}</h3>
-
-      <div className="form-grid">
-        {mode === 'signup' ? (
-          <label>
-            <span>Nombre completo</span>
-            <input
-              type="text"
-              value={authForm.name}
-              onChange={(event) => onAuthFormChange('name', event.target.value)}
-              placeholder="Tu nombre"
-            />
-          </label>
-        ) : null}
-
-        <label>
-          <span>Correo</span>
-          <input
-            type="email"
-            value={authForm.email}
-            onChange={(event) => onAuthFormChange('email', event.target.value)}
-            placeholder="correo@ejemplo.com"
-          />
-        </label>
-
-        {mode === 'signup' ? (
-          <label>
-            <span>Teléfono</span>
-            <input
-              type="tel"
-              value={authForm.phone}
-              onChange={(event) => onAuthFormChange('phone', event.target.value)}
-              placeholder="+56 9 1234 5678"
-            />
-          </label>
-        ) : null}
-
-        <label>
-          <span>Contraseña</span>
-          <input
-            type="password"
-            value={authForm.password}
-            onChange={(event) => onAuthFormChange('password', event.target.value)}
-            placeholder="Mínimo 8 caracteres"
-          />
-        </label>
-
-        {mode === 'signup' ? (
-          <label className="full-width">
-            <span>Confirmar contraseña</span>
-            <input
-              type="password"
-              value={authForm.confirmPassword}
-              onChange={(event) => onAuthFormChange('confirmPassword', event.target.value)}
-              placeholder="Repite la contraseña"
-            />
-          </label>
-        ) : null}
-      </div>
-
-      {mode === 'signup' ? (
-        <p className="form-hint">
-          La contraseña debe tener al menos 8 caracteres, una letra y un número.
-        </p>
-      ) : null}
-
-      {message ? <p className="form-message">{message}</p> : null}
-    </form>
-  )
-}
-
-function ProfileCard({ session, onGoToAdmin, onLogout }) {
-  return (
-    <div className="panel-card auth-card profile-card">
-      <p className="eyebrow">Mi perfil</p>
-      <h3>{session.name}</h3>
-      <p>Sesión activa y guardada en el navegador.</p>
-
-      <div className="profile-grid">
-        <div>
-          <strong>Correo</strong>
-          <span>{session.email}</span>
-        </div>
-        <div>
-          <strong>Teléfono</strong>
-          <span>{session.phone || 'No registrado'}</span>
-        </div>
-      </div>
-
-      <div className="profile-actions">
-        <button className="button button-primary" type="button" onClick={onGoToAdmin}>
-          Abrir administrador
-        </button>
-        <button className="button button-secondary" type="button" onClick={onLogout}>
-          Cerrar sesión
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function AccountPanel({
-  isOpen,
-  mode,
-  session,
-  authForm,
-  message,
-  onClose,
-  onModeChange,
-  onAuthFormChange,
-  onSubmit,
-  onLogout,
-  onGoToAdmin,
-}) {
-  if (!isOpen) {
-    return null
-  }
-
-  const hasSession = Boolean(session)
-
-  return (
-    <section className="panel-overlay">
-      <div className="panel-sheet panel-account">
-        <div className="modal-header">
-          <div>
-            <p className="eyebrow">Mi cuenta</p>
-            <h2>Acceso separado del catálogo y del panel admin</h2>
+      <div className="auth-layout">
+        <div className="card-surface auth-aside">
+          <h2>Acceso a tu cuenta</h2>
+          <p>
+            Al iniciar sesión, el sistema reconoce tu usuario y te lleva a <strong>Mi cuenta</strong>.
+          </p>
+          <div className="mini-list">
+            <span>Sesión persistente en localStorage.</span>
+            <span>Reconocimiento automático después de entrar.</span>
+            <span>Acceso separado del registro.</span>
           </div>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar cuenta">
-            ✕
+          <button className="button-ghost" onClick={() => onNavigate('register')} type="button">
+            Ir a registro
           </button>
         </div>
 
-        <div className="account-tabs" role="tablist" aria-label="Opciones de cuenta">
-          <button
-            className={mode === 'signin' ? 'auth-tab active' : 'auth-tab'}
-            type="button"
-            onClick={() => onModeChange('signin')}
-          >
-            Iniciar sesión
+        <form className="card-surface auth-form" onSubmit={onSubmit}>
+          <div className="field">
+            <label htmlFor="login-email">Correo electrónico</label>
+            <input
+              autoComplete="email"
+              id="login-email"
+              name="email"
+              onChange={onChange}
+              placeholder="tucorreo@ejemplo.com"
+              required
+              type="email"
+              value={form.email}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="login-password">Contraseña</label>
+            <input
+              autoComplete="current-password"
+              id="login-password"
+              name="password"
+              onChange={onChange}
+              placeholder="Tu contraseña"
+              required
+              type="password"
+              value={form.password}
+            />
+          </div>
+          {message ? <p className="form-message">{message}</p> : null}
+          <button className="button-primary full-width" type="submit">
+            Ingresar
           </button>
-          <button
-            className={mode === 'signup' ? 'auth-tab active' : 'auth-tab'}
-            type="button"
-            onClick={() => onModeChange('signup')}
-          >
+          <button className="button-secondary full-width" onClick={() => onNavigate('home')} type="button">
+            Volver al inicio
+          </button>
+        </form>
+      </div>
+    </section>
+  )
+}
+
+function RegisterPage({ form, message, onChange, onSubmit, onNavigate }) {
+  return (
+    <section className="page page-auth">
+      <div className="page-heading">
+        <p className="eyebrow">Pantalla independiente</p>
+        <h1>Registro</h1>
+        <p>Formulario separado para crear tu cuenta antes de iniciar sesión.</p>
+      </div>
+
+      <div className="auth-layout">
+        <div className="card-surface auth-aside">
+          <h2>Crear cuenta sólida</h2>
+          <p>
+            El registro valida correo, contraseña, confirmación y aceptación de términos.
+          </p>
+          <div className="mini-list">
+            <span>Nombre, teléfono y correo obligatorios.</span>
+            <span>Contraseña de al menos 8 caracteres.</span>
+            <span>La sesión se guarda al registrarte.</span>
+          </div>
+          <button className="button-ghost" onClick={() => onNavigate('login')} type="button">
+            Ya tengo cuenta
+          </button>
+        </div>
+
+        <form className="card-surface auth-form" onSubmit={onSubmit}>
+          <div className="field">
+            <label htmlFor="register-name">Nombre completo</label>
+            <input
+              autoComplete="name"
+              id="register-name"
+              name="name"
+              onChange={onChange}
+              placeholder="Nombre y apellido"
+              required
+              type="text"
+              value={form.name}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="register-phone">Teléfono</label>
+            <input
+              autoComplete="tel"
+              id="register-phone"
+              name="phone"
+              onChange={onChange}
+              placeholder="+56 9 1234 5678"
+              required
+              type="tel"
+              value={form.phone}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="register-email">Correo electrónico</label>
+            <input
+              autoComplete="email"
+              id="register-email"
+              name="email"
+              onChange={onChange}
+              placeholder="correo@ejemplo.com"
+              required
+              type="email"
+              value={form.email}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="register-password">Contraseña</label>
+            <input
+              autoComplete="new-password"
+              id="register-password"
+              name="password"
+              onChange={onChange}
+              placeholder="Mínimo 8 caracteres"
+              required
+              type="password"
+              value={form.password}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="register-confirm-password">Confirmar contraseña</label>
+            <input
+              autoComplete="new-password"
+              id="register-confirm-password"
+              name="confirmPassword"
+              onChange={onChange}
+              placeholder="Repite la contraseña"
+              required
+              type="password"
+              value={form.confirmPassword}
+            />
+          </div>
+          <div className="field checkbox-field">
+            <input
+              checked={form.acceptTerms}
+              id="register-accept-terms"
+              name="acceptTerms"
+              onChange={onChange}
+              type="checkbox"
+            />
+            <label htmlFor="register-accept-terms">Acepto guardar mi sesión en este dispositivo.</label>
+          </div>
+          {message ? <p className="form-message">{message}</p> : null}
+          <button className="button-primary full-width" type="submit">
             Crear cuenta
           </button>
-          <button
-            className={hasSession && mode === 'profile' ? 'auth-tab active' : 'auth-tab'}
-            type="button"
-            onClick={() => onModeChange('profile')}
-            disabled={!hasSession}
-          >
-            Mi perfil
+          <button className="button-secondary full-width" onClick={() => onNavigate('home')} type="button">
+            Volver al inicio
           </button>
-        </div>
+        </form>
+      </div>
+    </section>
+  )
+}
 
-        <div className="account-grid">
-          {hasSession && mode === 'profile' ? (
-            <ProfileCard session={session} onGoToAdmin={onGoToAdmin} onLogout={onLogout} />
-          ) : (
-            <AccountForm
-              mode={mode}
-              authForm={authForm}
-              message={message}
-              onModeChange={onModeChange}
-              onAuthFormChange={onAuthFormChange}
-              onSubmit={onSubmit}
-            />
-          )}
+function AccountPage({ session, onNavigate, onLogout }) {
+  return (
+    <section className="page page-account">
+      <div className="page-heading">
+        <p className="eyebrow">Sesión reconocida</p>
+        <h1>Mi cuenta</h1>
+        <p>Esta pantalla muestra el usuario activo y deja el CRUD aparte.</p>
+      </div>
 
-          <aside className="panel-card auth-summary">
-            <h3>Por qué este acceso es más sólido</h3>
+      {session ? (
+        <div className="account-layout">
+          <article className="card-surface account-summary">
+            <h2>{session.name}</h2>
+            <p>{session.email}</p>
+            <p>{session.phone}</p>
+            <div className="account-meta">
+              <span>Sesión iniciada</span>
+              <span>{new Date(session.loggedInAt).toLocaleString('es-CL')}</span>
+            </div>
+            <div className="account-actions">
+              <button className="button-primary" onClick={() => onNavigate('admin')} type="button">
+                Ir al CRUD
+              </button>
+              <button className="button-secondary" onClick={() => onNavigate('home')} type="button">
+                Ir al inicio
+              </button>
+              <button className="button-ghost" onClick={onLogout} type="button">
+                Cerrar sesión
+              </button>
+            </div>
+          </article>
+
+          <aside className="card-surface account-notes">
+            <h3>Reconocimiento de cuenta</h3>
             <ul>
-              <li>Registro con nombre, teléfono, correo y confirmación de contraseña</li>
-              <li>Validación de correo y contraseña más segura</li>
-              <li>La sesión se guarda y se recupera automáticamente al volver a abrir la página</li>
-              <li>El panel admin queda separado del flujo de cuenta</li>
+              <li>La sesión se conserva al recargar la página.</li>
+              <li>El sistema muestra el nombre y correo del usuario activo.</li>
+              <li>El CRUD solo se abre desde su pantalla dedicada.</li>
             </ul>
           </aside>
         </div>
-      </div>
+      ) : (
+        <div className="card-surface empty-state">
+          <h2>No hay una sesión activa</h2>
+          <p>Ingresa o regístrate para que el sistema reconozca tu cuenta.</p>
+          <div className="hero-actions">
+            <button className="button-primary" onClick={() => onNavigate('login')} type="button">
+              Ingresar
+            </button>
+            <button className="button-secondary" onClick={() => onNavigate('register')} type="button">
+              Registrarme
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
 
-function ProductForm({
-  productForm,
-  adminMessage,
-  pendingImageName,
-  onProductSubmit,
-  onProductFormChange,
-  onProductImage,
-  onResetForm,
-}) {
+function ProductEditor({ form, message, onChange, onSubmit, onReset, onImageUpload }) {
   return (
-    <form className="panel-card admin-form" onSubmit={onProductSubmit}>
-      <h3>{productForm.id ? 'Editar producto' : 'Nuevo producto'}</h3>
-      <div className="form-grid">
-        <label>
-          <span>Nombre</span>
-          <input
-            type="text"
-            value={productForm.name}
-            onChange={(event) => onProductFormChange('name', event.target.value)}
-            placeholder="Nombre del producto"
-          />
-        </label>
-        <label>
-          <span>Categoría</span>
-          <input
-            type="text"
-            value={productForm.category}
-            onChange={(event) => onProductFormChange('category', event.target.value)}
-            placeholder="Tortas, Postres, Eventos"
-          />
-        </label>
-        <label>
-          <span>Precio</span>
-          <input
-            type="text"
-            value={productForm.price}
-            onChange={(event) => onProductFormChange('price', event.target.value)}
-            placeholder="$12.000"
-          />
-        </label>
-        <label className="full-width">
-          <span>Descripción</span>
-          <textarea
-            value={productForm.description}
-            onChange={(event) => onProductFormChange('description', event.target.value)}
-            placeholder="Describe el producto"
-            rows="4"
-          />
-        </label>
-        <label className="full-width">
-          <span>Imagen</span>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(event) => onProductImage(event.target.files?.[0])}
-          />
-        </label>
+    <form className="card-surface editor-form" onSubmit={onSubmit}>
+      <div className="section-heading compact">
+        <div>
+          <p className="eyebrow">CRUD</p>
+          <h2>{form.id ? 'Editar producto' : 'Nuevo producto'}</h2>
+        </div>
+        <button className="button-ghost" onClick={onReset} type="button">
+          Limpiar
+        </button>
       </div>
 
-      {pendingImageName ? <p className="form-message">Imagen lista: {pendingImageName}</p> : null}
-      {adminMessage ? <p className="form-message">{adminMessage}</p> : null}
-
-      {productForm.image ? (
-        <img className="admin-preview" src={productForm.image} alt="Vista previa del producto" />
+      <div className="field">
+        <label htmlFor="product-name">Nombre</label>
+        <input id="product-name" name="name" onChange={onChange} required type="text" value={form.name} />
+      </div>
+      <div className="field">
+        <label htmlFor="product-category">Categoría</label>
+        <input id="product-category" name="category" onChange={onChange} required type="text" value={form.category} />
+      </div>
+      <div className="field">
+        <label htmlFor="product-price">Precio</label>
+        <input id="product-price" name="price" onChange={onChange} required type="text" value={form.price} />
+      </div>
+      <div className="field">
+        <label htmlFor="product-description">Descripción</label>
+        <textarea id="product-description" name="description" onChange={onChange} required rows="4" value={form.description} />
+      </div>
+      <div className="field">
+        <label htmlFor="product-image">Imagen</label>
+        <input id="product-image" accept="image/*" onChange={onImageUpload} type="file" />
+      </div>
+      {form.image ? (
+        <div className="image-preview">
+          <img alt="Vista previa del producto" src={form.image} />
+        </div>
       ) : null}
-
-      <div className="admin-actions">
-        <button className="button button-primary" type="submit">
-          {productForm.id ? 'Guardar cambios' : 'Agregar producto'}
-        </button>
-        <button className="button button-secondary" type="button" onClick={onResetForm}>
-          Limpiar formulario
-        </button>
-      </div>
+      {message ? <p className="form-message">{message}</p> : null}
+      <button className="button-primary full-width" type="submit">
+        {form.id ? 'Guardar cambios' : 'Agregar producto'}
+      </button>
     </form>
   )
 }
 
-function ProductList({ products, onEditProduct, onDeleteProduct }) {
+function ProductManager({ products, onEdit, onDelete }) {
   return (
-    <div className="panel-card admin-list">
-      <h3>Productos cargados</h3>
-      <div className="admin-items">
+    <div className="card-surface manager-list">
+      <div className="section-heading compact">
+        <div>
+          <p className="eyebrow">Lista</p>
+          <h2>Productos administrados</h2>
+        </div>
+        <span className="section-note">Editar, borrar y actualizar imágenes.</span>
+      </div>
+
+      <div className="manager-grid">
         {products.map((product) => (
-          <article className="admin-item" key={product.id}>
-            <img className="admin-item-image" src={product.image} alt={product.name} />
-            <div className="admin-item-content">
-              <strong>{product.name}</strong>
-              <span>{product.category}</span>
-              <p>{product.price}</p>
+          <article className="manager-card" key={product.id}>
+            <img alt={product.name} src={product.image} />
+            <div>
+              <p className="product-category">{product.category}</p>
+              <h3>{product.name}</h3>
+              <p>{product.description}</p>
             </div>
-            <div className="admin-item-actions">
-              <button type="button" onClick={() => onEditProduct(product)}>
-                Editar
-              </button>
-              <button type="button" onClick={() => onDeleteProduct(product.id)}>
-                Eliminar
-              </button>
+            <div className="manager-footer">
+              <strong>${product.price}</strong>
+              <div className="manager-actions">
+                <button className="button-secondary" onClick={() => onEdit(product)} type="button">
+                  Editar
+                </button>
+                <button className="button-ghost" onClick={() => onDelete(product.id)} type="button">
+                  Borrar
+                </button>
+              </div>
             </div>
           </article>
         ))}
@@ -618,262 +579,74 @@ function ProductList({ products, onEditProduct, onDeleteProduct }) {
   )
 }
 
-function AdminPanel({
-  isOpen,
-  productForm,
-  adminMessage,
-  pendingImageName,
+function AdminPage({
+  session,
   products,
-  onClose,
-  onProductSubmit,
-  onProductFormChange,
-  onProductImage,
-  onResetForm,
-  onEditProduct,
-  onDeleteProduct,
+  form,
+  message,
+  onNavigate,
+  onChange,
+  onSubmit,
+  onReset,
+  onImageUpload,
+  onEdit,
+  onDelete,
 }) {
-  if (!isOpen) {
-    return null
-  }
-
   return (
-    <section className="panel-overlay">
-      <div className="panel-sheet panel-admin">
-        <div className="modal-header">
-          <div>
-            <p className="eyebrow">Administrar</p>
-            <h2>CRUD de productos con subida de imágenes</h2>
+    <section className="page page-admin">
+      <div className="page-heading">
+        <p className="eyebrow">Pantalla separada</p>
+        <h1>CRUD / Administrar</h1>
+        <p>Todo el control de productos está fuera del login, fuera del registro y fuera de la cuenta.</p>
+      </div>
+
+      {session ? (
+        <div className="admin-layout">
+          <ProductEditor
+            form={form}
+            message={message}
+            onChange={onChange}
+            onImageUpload={onImageUpload}
+            onReset={onReset}
+            onSubmit={onSubmit}
+          />
+          <ProductManager onDelete={onDelete} onEdit={onEdit} products={products} />
+        </div>
+      ) : (
+        <div className="card-surface empty-state">
+          <h2>Necesitas iniciar sesión para administrar</h2>
+          <p>El botón CRUD existe y lleva a esta pantalla, pero requiere una sesión activa.</p>
+          <div className="hero-actions">
+            <button className="button-primary" onClick={() => onNavigate('login')} type="button">
+              Ingresar
+            </button>
+            <button className="button-secondary" onClick={() => onNavigate('register')} type="button">
+              Registrarme
+            </button>
           </div>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar panel admin">
-            ✕
-          </button>
         </div>
-
-        <div className="admin-layout modal-admin-layout">
-          <ProductForm
-            productForm={productForm}
-            adminMessage={adminMessage}
-            pendingImageName={pendingImageName}
-            onProductSubmit={onProductSubmit}
-            onProductFormChange={onProductFormChange}
-            onProductImage={onProductImage}
-            onResetForm={onResetForm}
-          />
-
-          <ProductList
-            products={products}
-            onEditProduct={onEditProduct}
-            onDeleteProduct={onDeleteProduct}
-          />
-        </div>
-      </div>
+      )}
     </section>
   )
-}
-
-function ContactSection() {
-  return (
-    <section className="section contact-band" id="contacto">
-      <div>
-        <p className="eyebrow">Contacto</p>
-        <h2>Listo para seguir modificando la web según lo que me indiques.</h2>
-        <p>
-          Si quieres, el siguiente paso puede ser conectar este frontend a una API real
-          para usuarios y productos, o dejarlo como panel interno con persistencia local.
-        </p>
-      </div>
-
-      <div className="contact-actions">
-        <a className="button button-primary" href="mailto:hola@caprichodulce.com">
-          hola@caprichodulce.com
-        </a>
-        <a className="button button-secondary" href="tel:+0000000000">
-          Llamar ahora
-        </a>
-      </div>
-    </section>
-  )
-}
-
-function FloatingActions({ onOpenAccount, onOpenAdmin }) {
-  return (
-    <div className="floating-actions" aria-label="Acciones rápidas">
-      <button className="floating-action floating-account" type="button" onClick={onOpenAccount}>
-        Mi cuenta
-      </button>
-      <button className="floating-action floating-admin" type="button" onClick={onOpenAdmin}>
-        Administrar
-      </button>
-    </div>
-  )
-}
-
-Header.propTypes = {
-  sessionName: PropTypes.string,
-  onOpenAccount: PropTypes.func.isRequired,
-  onOpenAdmin: PropTypes.func.isRequired,
-}
-
-HeroSection.propTypes = {
-  onOpenAccount: PropTypes.func.isRequired,
-  onOpenAdmin: PropTypes.func.isRequired,
-  productsCount: PropTypes.number.isRequired,
-  sessionName: PropTypes.string,
-}
-
-CatalogSection.propTypes = {
-  products: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      description: PropTypes.string.isRequired,
-      price: PropTypes.string.isRequired,
-      category: PropTypes.string.isRequired,
-      image: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-  onOpenAdmin: PropTypes.func.isRequired,
-}
-
-AccountForm.propTypes = {
-  mode: PropTypes.oneOf(['signin', 'signup']).isRequired,
-  authForm: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    email: PropTypes.string.isRequired,
-    phone: PropTypes.string.isRequired,
-    password: PropTypes.string.isRequired,
-    confirmPassword: PropTypes.string.isRequired,
-    acceptTerms: PropTypes.bool.isRequired,
-  }).isRequired,
-  message: PropTypes.string.isRequired,
-  onModeChange: PropTypes.func.isRequired,
-  onAuthFormChange: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
-}
-
-ProfileCard.propTypes = {
-  session: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    email: PropTypes.string.isRequired,
-    phone: PropTypes.string,
-  }).isRequired,
-  onGoToAdmin: PropTypes.func.isRequired,
-  onLogout: PropTypes.func.isRequired,
-}
-
-AccountPanel.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  mode: PropTypes.oneOf(['signin', 'signup', 'profile']).isRequired,
-  session: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    email: PropTypes.string.isRequired,
-    phone: PropTypes.string,
-  }),
-  authForm: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    email: PropTypes.string.isRequired,
-    phone: PropTypes.string.isRequired,
-    password: PropTypes.string.isRequired,
-    confirmPassword: PropTypes.string.isRequired,
-    acceptTerms: PropTypes.bool.isRequired,
-  }).isRequired,
-  message: PropTypes.string.isRequired,
-  onClose: PropTypes.func.isRequired,
-  onModeChange: PropTypes.func.isRequired,
-  onAuthFormChange: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
-  onLogout: PropTypes.func.isRequired,
-  onGoToAdmin: PropTypes.func.isRequired,
-}
-
-ProductForm.propTypes = {
-  productForm: PropTypes.shape({
-    id: PropTypes.string,
-    name: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    price: PropTypes.string.isRequired,
-    category: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-  }).isRequired,
-  adminMessage: PropTypes.string.isRequired,
-  pendingImageName: PropTypes.string.isRequired,
-  onProductSubmit: PropTypes.func.isRequired,
-  onProductFormChange: PropTypes.func.isRequired,
-  onProductImage: PropTypes.func.isRequired,
-  onResetForm: PropTypes.func.isRequired,
-}
-
-ProductList.propTypes = {
-  products: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      description: PropTypes.string.isRequired,
-      price: PropTypes.string.isRequired,
-      category: PropTypes.string.isRequired,
-      image: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-  onEditProduct: PropTypes.func.isRequired,
-  onDeleteProduct: PropTypes.func.isRequired,
-}
-
-AdminPanel.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  productForm: PropTypes.shape({
-    id: PropTypes.string,
-    name: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    price: PropTypes.string.isRequired,
-    category: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-  }).isRequired,
-  adminMessage: PropTypes.string.isRequired,
-  pendingImageName: PropTypes.string.isRequired,
-  products: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      description: PropTypes.string.isRequired,
-      price: PropTypes.string.isRequired,
-      category: PropTypes.string.isRequired,
-      image: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-  onClose: PropTypes.func.isRequired,
-  onProductSubmit: PropTypes.func.isRequired,
-  onProductFormChange: PropTypes.func.isRequired,
-  onProductImage: PropTypes.func.isRequired,
-  onResetForm: PropTypes.func.isRequired,
-  onEditProduct: PropTypes.func.isRequired,
-  onDeleteProduct: PropTypes.func.isRequired,
-}
-
-FloatingActions.propTypes = {
-  onOpenAccount: PropTypes.func.isRequired,
-  onOpenAdmin: PropTypes.func.isRequired,
 }
 
 function App() {
-  const [products, setProducts] = useState(() =>
-    readStoredJson(PRODUCTS_STORAGE_KEY, initialProducts),
-  )
-  const [authStore, setAuthStore] = useState(() =>
-    readStoredJson(AUTH_STORAGE_KEY, emptyAuthStore),
-  )
-  const [accountOpen, setAccountOpen] = useState(false)
-  const [adminOpen, setAdminOpen] = useState(false)
-  const [accountMode, setAccountMode] = useState(() =>
-    readStoredJson(AUTH_STORAGE_KEY, emptyAuthStore).session ? 'profile' : 'signin',
-  )
-  const [authForm, setAuthForm] = useState(emptyAuthForm)
-  const [authMessage, setAuthMessage] = useState('')
+  const [products, setProducts] = useState(() => readStoredJson(PRODUCTS_STORAGE_KEY, initialProducts))
+  const [authStore, setAuthStore] = useState(() => readStoredJson(AUTH_STORAGE_KEY, emptyAuthStore))
+  const [loginForm, setLoginForm] = useState(emptyLoginForm)
+  const [registerForm, setRegisterForm] = useState(emptyRegisterForm)
   const [productForm, setProductForm] = useState(emptyProductForm)
-  const [adminMessage, setAdminMessage] = useState('')
-  const [pendingImageName, setPendingImageName] = useState('')
+  const [currentPage, setCurrentPage] = useState(() => {
+    const storedPage = readStoredJson(PAGE_STORAGE_KEY, '')
+    return storedPage || 'home'
+  })
+  const [authMessage, setAuthMessage] = useState('')
+  const [crudMessage, setCrudMessage] = useState('')
 
-  const users = authStore.users ?? []
-  const session = authStore.session ?? null
+  const currentUser = authStore.users.find((user) => user.id === authStore.session?.id) ?? null
+  const session = authStore.session ? currentUser ?? authStore.session : null
+  const currentPageLabel = pageLabels[currentPage] ?? 'Inicio'
+
   useEffect(() => {
     globalThis.window.localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products))
   }, [products])
@@ -882,261 +655,254 @@ function App() {
     globalThis.window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authStore))
   }, [authStore])
 
-  function openAccount(mode = session ? 'profile' : 'signin') {
-    setAccountMode(mode)
-    setAccountOpen(true)
+  useEffect(() => {
+    globalThis.window.localStorage.setItem(PAGE_STORAGE_KEY, JSON.stringify(currentPage))
+  }, [currentPage])
+
+  const navigate = (page) => {
+    if ((page === 'account' || page === 'admin') && !session) {
+      setAuthMessage('Debes iniciar sesión para abrir esa pantalla.')
+      setCurrentPage('login')
+      return
+    }
+
+    if (session && (page === 'login' || page === 'register')) {
+      setCurrentPage('account')
+      return
+    }
+
     setAuthMessage('')
+    setCrudMessage('')
+    setCurrentPage(page)
   }
 
-  function openAdmin() {
-    if (!session) {
-      setAccountMode('signin')
-      setAccountOpen(true)
-      setAuthMessage('Inicia sesión para administrar productos.')
-      return
-    }
-
-    setAdminOpen(true)
+  const handleLoginChange = (event) => {
+    const { name, value } = event.target
+    setLoginForm((previous) => ({ ...previous, [name]: value }))
   }
 
-  function handleAuthFormChange(field, value) {
-    setAuthForm((current) => ({ ...current, [field]: value }))
-  }
-
-  function handleAuthSubmit(event) {
-    event.preventDefault()
-    setAuthMessage('')
-
-    const email = authForm.email.trim().toLowerCase()
-    const password = authForm.password.trim()
-    const name = authForm.name.trim()
-    const phone = authForm.phone.trim()
-
-    if (!email || !password) {
-      setAuthMessage('Completa correo y contraseña.')
-      return
-    }
-
-    if (!isValidEmail(email)) {
-      setAuthMessage('Ingresa un correo válido.')
-      return
-    }
-
-    if (accountMode === 'signup') {
-      if (!name || !phone || !authForm.confirmPassword.trim()) {
-        setAuthMessage('Completa nombre, teléfono, correo y contraseña.')
-        return
-      }
-
-      if (!isStrongPassword(password)) {
-        setAuthMessage('La contraseña debe tener al menos 8 caracteres, una letra y un número.')
-        return
-      }
-
-      if (password !== authForm.confirmPassword.trim()) {
-        setAuthMessage('Las contraseñas no coinciden.')
-        return
-      }
-
-      if (!authForm.acceptTerms) {
-        setAuthMessage('Debes aceptar el uso básico de tus datos para crear la cuenta.')
-        return
-      }
-
-      const existingUser = users.find((user) => user.email === email)
-
-      if (existingUser) {
-        setAuthMessage('Ese correo ya está registrado.')
-        return
-      }
-
-      const nextUser = { name, email, phone, password }
-      setAuthStore((current) => ({
-        users: [...current.users, nextUser],
-        session: createSessionFromUser(nextUser),
-      }))
-      setAccountMode('profile')
-      setAccountOpen(true)
-      setAuthForm(emptyAuthForm)
-      setAuthMessage('Cuenta creada y sesión iniciada.')
-      return
-    }
-
-    const matchedUser = users.find((user) => user.email === email && user.password === password)
-
-    if (!matchedUser) {
-      setAuthMessage('Credenciales inválidas.')
-      return
-    }
-
-    setAuthStore((current) => ({
-      ...current,
-      session: createSessionFromUser(matchedUser),
+  const handleRegisterChange = (event) => {
+    const { name, value, checked, type } = event.target
+    setRegisterForm((previous) => ({
+      ...previous,
+      [name]: type === 'checkbox' ? checked : value,
     }))
-    setAccountMode('profile')
-    setAccountOpen(true)
-    setAuthForm(emptyAuthForm)
-    setAuthMessage('Sesión iniciada correctamente.')
   }
 
-  function handleLogout() {
-    setAuthStore((current) => ({ ...current, session: null }))
-    setAccountMode('signin')
-    setAccountOpen(false)
-    setAdminMessage('Sesión cerrada.')
+  const handleProductChange = (event) => {
+    const { name, value } = event.target
+    setProductForm((previous) => ({ ...previous, [name]: value }))
   }
 
-  function handleProductImage(file) {
+  const handleLoginSubmit = (event) => {
+    event.preventDefault()
+
+    if (!isValidEmail(loginForm.email)) {
+      setAuthMessage('Escribe un correo válido para ingresar.')
+      return
+    }
+
+    const normalizedEmail = loginForm.email.trim().toLowerCase()
+    const user = authStore.users.find((candidate) => candidate.email === normalizedEmail)
+
+    if (user?.password !== loginForm.password) {
+      setAuthMessage('Correo o contraseña incorrectos.')
+      return
+    }
+
+    const sessionData = createSessionFromUser(user)
+    setAuthStore((previous) => ({ ...previous, session: sessionData }))
+    setLoginForm(emptyLoginForm)
+    setAuthMessage(`Sesión iniciada como ${user.name}.`)
+    setCurrentPage('account')
+  }
+
+  const handleRegisterSubmit = (event) => {
+    event.preventDefault()
+
+    if (!registerForm.acceptTerms) {
+      setAuthMessage('Debes aceptar el guardado de sesión para continuar.')
+      return
+    }
+
+    if (!isValidEmail(registerForm.email)) {
+      setAuthMessage('Escribe un correo válido para registrarte.')
+      return
+    }
+
+    if (!isStrongPassword(registerForm.password)) {
+      setAuthMessage('La contraseña debe tener al menos 8 caracteres.')
+      return
+    }
+
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setAuthMessage('Las contraseñas no coinciden.')
+      return
+    }
+
+    const normalizedEmail = registerForm.email.trim().toLowerCase()
+    const emailExists = authStore.users.some((user) => user.email === normalizedEmail)
+
+    if (emailExists) {
+      setAuthMessage('Ese correo ya está registrado.')
+      return
+    }
+
+    const user = {
+      id: makeId('user'),
+      name: registerForm.name.trim(),
+      phone: registerForm.phone.trim(),
+      email: normalizedEmail,
+      password: registerForm.password,
+      createdAt: new Date().toISOString(),
+    }
+
+    const sessionData = createSessionFromUser(user)
+    setAuthStore((previous) => ({
+      users: [...previous.users, user],
+      session: sessionData,
+    }))
+    setRegisterForm(emptyRegisterForm)
+    setAuthMessage(`Cuenta creada y sesión iniciada como ${user.name}.`)
+    setCurrentPage('account')
+  }
+
+  const handleLogout = () => {
+    setAuthStore((previous) => ({ ...previous, session: null }))
+    setAuthMessage('Sesión cerrada correctamente.')
+    setCrudMessage('')
+    setCurrentPage('home')
+  }
+
+  const handleProductSubmit = (event) => {
+    event.preventDefault()
+
+    const nextProduct = {
+      ...productForm,
+      id: productForm.id || makeId('product'),
+      name: productForm.name.trim(),
+      category: productForm.category.trim(),
+      price: productForm.price.trim(),
+      description: productForm.description.trim(),
+      image: productForm.image,
+    }
+
+    if (!nextProduct.image) {
+      setCrudMessage('Debes agregar una imagen para el producto.')
+      return
+    }
+
+    setProducts((previous) => {
+      const existingIndex = previous.findIndex((product) => product.id === nextProduct.id)
+
+      if (existingIndex === -1) {
+        return [nextProduct, ...previous]
+      }
+
+      const updatedProducts = [...previous]
+      updatedProducts[existingIndex] = nextProduct
+      return updatedProducts
+    })
+
+    setCrudMessage(productForm.id ? 'Producto actualizado.' : 'Producto agregado.')
+    setProductForm(emptyProductForm)
+  }
+
+  const handleProductReset = () => {
+    setProductForm(emptyProductForm)
+    setCrudMessage('')
+  }
+
+  const handleImageUpload = (event) => {
+    const file = event.target.files?.[0]
+
     if (!file) {
       return
     }
 
     const reader = new FileReader()
-
     reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : ''
-      setProductForm((currentForm) => ({ ...currentForm, image: result }))
-      setPendingImageName(file.name)
+      const result = reader.result
+      setProductForm((previous) => ({ ...previous, image: typeof result === 'string' ? result : '' }))
     }
-
     reader.readAsDataURL(file)
   }
 
-  function handleProductSubmit(event) {
-    event.preventDefault()
-
-    if (!session) {
-      setAdminMessage('Debes iniciar sesión para administrar productos.')
-      return
-    }
-
-    const name = productForm.name.trim()
-    const description = productForm.description.trim()
-    const price = productForm.price.trim()
-    const category = productForm.category.trim()
-
-    if (!name || !description || !price || !category) {
-      setAdminMessage('Completa nombre, descripción, precio y categoría.')
-      return
-    }
-
-    const nextProduct = {
-      id: productForm.id ?? makeId('prod'),
-      name,
-      description,
-      price,
-      category,
-      image:
-        productForm.image ||
-        'https://images.unsplash.com/photo-1495147466023-ac5c588e2e94?auto=format&fit=crop&w=900&q=80',
-    }
-
-    setProducts((currentProducts) => {
-      const exists = currentProducts.some((product) => product.id === nextProduct.id)
-
-      if (exists) {
-        return currentProducts.map((product) =>
-          product.id === nextProduct.id ? nextProduct : product,
-        )
-      }
-
-      return [nextProduct, ...currentProducts]
-    })
-
-    setProductForm(emptyProductForm)
-    setPendingImageName('')
-    setAdminMessage(productForm.id ? 'Producto actualizado.' : 'Producto agregado.')
-  }
-
-  function editProduct(product) {
+  const handleProductEdit = (product) => {
     setProductForm(product)
-    setPendingImageName(product.image?.startsWith('data:') ? 'Imagen cargada' : '')
-    setAdminOpen(true)
+    setCrudMessage(`Editando ${product.name}.`)
+    setCurrentPage('admin')
   }
 
-  function deleteProduct(productId) {
-    setProducts((currentProducts) => currentProducts.filter((product) => product.id !== productId))
-    setAdminMessage('Producto eliminado.')
+  const handleProductDelete = (productId) => {
+    setProducts((previous) => previous.filter((product) => product.id !== productId))
+    setCrudMessage('Producto eliminado.')
+
+    if (productForm.id === productId) {
+      setProductForm(emptyProductForm)
+    }
   }
 
-  function resetProductForm() {
-    setProductForm(emptyProductForm)
-    setPendingImageName('')
-  }
+  let activePage = currentPage
 
-  const sessionName = session?.name
+  if (session && (currentPage === 'login' || currentPage === 'register')) {
+    activePage = 'account'
+  } else if (!session && (currentPage === 'account' || currentPage === 'admin')) {
+    activePage = 'login'
+  }
 
   return (
-    <div className="page-shell">
-      <Header sessionName={sessionName} onOpenAccount={() => openAccount()} onOpenAdmin={openAdmin} />
+    <div className="app-shell">
+      <PageShell currentPage={activePage} onLogout={handleLogout} onNavigate={navigate} session={session} />
+      <NoticeBar message={authMessage || crudMessage} />
 
-      <main>
-        <StatusBanner
-          sessionName={sessionName}
-          onOpenAccount={() => openAccount()}
-          onOpenAdmin={openAdmin}
-        />
-        <HeroSection
-          onOpenAccount={() => openAccount()}
-          onOpenAdmin={openAdmin}
-          productsCount={products.length}
-          sessionName={sessionName}
-        />
-        <CatalogSection products={products} onOpenAdmin={openAdmin} />
-        <ProcessSection />
+      <main className="app-main">
+        <div className="page-label">Pantalla actual: {currentPageLabel}</div>
 
-        <section className="section account-summary-band">
-          <div>
-            <p className="eyebrow">Mi cuenta</p>
-            <h2>Acceso y perfil en una ventana separada.</h2>
-            <p>
-              Usa el botón de cuenta para abrir tu perfil, iniciar sesión o registrarte sin mezclarlo con el catálogo ni con el CRUD.
-            </p>
-          </div>
-          <div className="account-summary-card">
-            <strong>{session ? session.name : 'Sin sesión activa'}</strong>
-            <span>{session ? session.email : 'Abre Mi cuenta para entrar o crear una cuenta.'}</span>
-            <button className="button button-secondary" type="button" onClick={() => openAccount()}>
-              Abrir cuenta
-            </button>
-          </div>
-        </section>
+        {activePage === 'home' ? (
+          <HomePage onNavigate={navigate} products={products} session={session} />
+        ) : null}
 
-        <ContactSection />
+        {activePage === 'login' ? (
+          <LoginPage
+            form={loginForm}
+            message={authMessage}
+            onChange={handleLoginChange}
+            onNavigate={navigate}
+            onSubmit={handleLoginSubmit}
+          />
+        ) : null}
+
+        {activePage === 'register' ? (
+          <RegisterPage
+            form={registerForm}
+            message={authMessage}
+            onChange={handleRegisterChange}
+            onNavigate={navigate}
+            onSubmit={handleRegisterSubmit}
+          />
+        ) : null}
+
+        {activePage === 'account' ? (
+          <AccountPage onNavigate={navigate} onLogout={handleLogout} session={session} />
+        ) : null}
+
+        {activePage === 'admin' ? (
+          <AdminPage
+            form={productForm}
+            message={crudMessage}
+            onChange={handleProductChange}
+            onDelete={handleProductDelete}
+            onEdit={handleProductEdit}
+            onImageUpload={handleImageUpload}
+            onNavigate={navigate}
+            onReset={handleProductReset}
+            onSubmit={handleProductSubmit}
+            products={products}
+            session={session}
+          />
+        ) : null}
       </main>
-
-      <FloatingActions onOpenAccount={() => openAccount()} onOpenAdmin={openAdmin} />
-
-      <AccountPanel
-        isOpen={accountOpen}
-        mode={accountMode}
-        session={session}
-        authForm={authForm}
-        message={authMessage}
-        onClose={() => setAccountOpen(false)}
-        onModeChange={setAccountMode}
-        onAuthFormChange={handleAuthFormChange}
-        onSubmit={handleAuthSubmit}
-        onLogout={handleLogout}
-        onGoToAdmin={openAdmin}
-      />
-
-      <AdminPanel
-        isOpen={adminOpen}
-        productForm={productForm}
-        adminMessage={adminMessage}
-        pendingImageName={pendingImageName}
-        products={products}
-        onClose={() => setAdminOpen(false)}
-        onProductSubmit={handleProductSubmit}
-        onProductFormChange={(field, value) =>
-          setProductForm((current) => ({ ...current, [field]: value }))
-        }
-        onProductImage={handleProductImage}
-        onResetForm={resetProductForm}
-        onEditProduct={editProduct}
-        onDeleteProduct={deleteProduct}
-      />
     </div>
   )
 }
