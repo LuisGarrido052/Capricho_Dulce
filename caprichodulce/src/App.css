@@ -4,6 +4,40 @@
   padding: 24px 0 48px;
 }
 
+.status-banner {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 18px;
+  align-items: center;
+  padding: 18px 22px;
+  margin: 22px 0 24px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: linear-gradient(135deg, rgba(255, 232, 214, 0.96), rgba(255, 255, 255, 0.95));
+  box-shadow: 0 20px 50px rgba(112, 44, 10, 0.16);
+}
+
+.status-banner h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 3.6vw, 2.1rem);
+}
+
+.status-banner p {
+  margin-top: 8px;
+  max-width: 60ch;
+}
+
+.status-actions {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.status-actions strong {
+  color: var(--text-h);
+  font-size: 1.05rem;
+}
+
 .topbar {
   position: sticky;
   top: 16px;
@@ -15,7 +49,7 @@
   padding: 14px 18px;
   border: 1px solid var(--border);
   border-radius: 24px;
-  background: rgba(255, 248, 242, 0.88);
+  background: linear-gradient(135deg, rgba(255, 251, 247, 0.94), rgba(255, 244, 235, 0.96));
   backdrop-filter: blur(14px);
   box-shadow: var(--shadow);
 }
@@ -99,14 +133,14 @@
 
 .topbar-cta,
 .button-primary {
-  color: #3b1a07;
-  background: linear-gradient(135deg, #ffd7b0, #ffb56b);
-  box-shadow: 0 18px 36px rgba(249, 115, 22, 0.2);
+  color: #fff9f4;
+  background: linear-gradient(135deg, #b45309, #f97316);
+  box-shadow: 0 18px 36px rgba(180, 83, 9, 0.28);
 }
 
 .button-secondary {
   color: var(--text-h);
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.92);
   border-color: var(--border);
 }
 
@@ -132,6 +166,10 @@ main {
   padding: 36px;
   overflow: hidden;
   position: relative;
+  background:
+    radial-gradient(circle at top right, rgba(249, 115, 22, 0.16), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(124, 58, 237, 0.08), transparent 24%),
+    rgba(255, 255, 255, 0.88);
 }
 
 .hero::before {

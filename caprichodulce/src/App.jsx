@@ -159,6 +159,37 @@ function Header({ sessionName, onOpenAccount, onOpenAdmin }) {
   )
 }
 
+function StatusBanner({ sessionName, onOpenAccount, onOpenAdmin }) {
+  return (
+    <section className="status-banner" aria-label="Estado del proyecto">
+      <div>
+        <p className="eyebrow">Nueva base activa</p>
+        <h2>La cuenta se abrió aparte y el administrador quedó como panel propio.</h2>
+        <p>
+          Esta franja muestra el cambio de forma inmediata, sin depender de abrir modales.
+          Desde aquí puedes entrar a tu cuenta o ir directo al panel de productos.
+        </p>
+      </div>
+
+      <div className="status-actions">
+        <strong>{sessionName ? `Sesión: ${sessionName}` : 'Sesión cerrada'}</strong>
+        <button className="button button-secondary" type="button" onClick={onOpenAccount}>
+          Abrir mi cuenta
+        </button>
+        <button className="button button-primary" type="button" onClick={onOpenAdmin}>
+          Ir a administrar
+        </button>
+      </div>
+    </section>
+  )
+}
+
+StatusBanner.propTypes = {
+  sessionName: PropTypes.string,
+  onOpenAccount: PropTypes.func.isRequired,
+  onOpenAdmin: PropTypes.func.isRequired,
+}
+
 function HeroSection({ onOpenAccount, onOpenAdmin, productsCount, sessionName }) {
   return (
     <section className="hero" id="inicio">
@@ -1040,6 +1071,11 @@ function App() {
       <Header sessionName={sessionName} onOpenAccount={() => openAccount()} onOpenAdmin={openAdmin} />
 
       <main>
+        <StatusBanner
+          sessionName={sessionName}
+          onOpenAccount={() => openAccount()}
+          onOpenAdmin={openAdmin}
+        />
         <HeroSection
           onOpenAccount={() => openAccount()}
           onOpenAdmin={openAdmin}
