@@ -301,6 +301,13 @@ main {
   margin-bottom: 24px;
 }
 
+.section-heading-row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .section h2,
 .contact-band h2 {
   font-size: clamp(1.7rem, 4vw, 3rem);
@@ -320,6 +327,35 @@ main {
 .menu-card,
 .step-card {
   padding: 22px;
+}
+
+.menu-card-product {
+  overflow: hidden;
+  padding: 0;
+}
+
+.product-image,
+.admin-preview,
+.admin-item-image {
+  object-fit: cover;
+}
+
+.product-image {
+  width: 100%;
+  height: 200px;
+}
+
+.menu-card-body {
+  padding: 20px;
+}
+
+.product-category {
+  margin: 0 0 6px;
+  color: #8a5a37;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .menu-card h3,
@@ -362,6 +398,189 @@ main {
 
 .button {
   min-width: 180px;
+  cursor: pointer;
+  border: 0;
+}
+
+.auth-section,
+.admin-panel {
+  display: grid;
+  gap: 20px;
+}
+
+.auth-layout,
+.admin-layout {
+  display: grid;
+  grid-template-columns: 1fr 0.9fr;
+  gap: 20px;
+}
+
+.auth-card,
+.auth-summary,
+.admin-form,
+.admin-list {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.auth-tab {
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--text-h);
+  font-weight: 700;
+}
+
+.auth-tab.active {
+  background: rgba(255, 209, 158, 0.6);
+}
+
+.form-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-grid label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-h);
+  font-weight: 700;
+}
+
+.form-grid input,
+.form-grid textarea {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-h);
+  padding: 0.95rem 1rem;
+  font: inherit;
+}
+
+.form-grid textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.form-grid input:focus,
+.form-grid textarea:focus {
+  outline: 2px solid rgba(249, 115, 22, 0.3);
+  outline-offset: 2px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.auth-submit {
+  justify-self: start;
+}
+
+.form-message {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  background: rgba(249, 115, 22, 0.08);
+  color: #4a1d0e;
+  border: 1px solid rgba(249, 115, 22, 0.12);
+}
+
+.auth-summary ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text);
+  display: grid;
+  gap: 8px;
+}
+
+.admin-form h3,
+.admin-list h3,
+.auth-summary h3 {
+  margin: 0;
+}
+
+.admin-preview {
+  width: 100%;
+  height: 180px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-items {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-item {
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.admin-item-image {
+  width: 96px;
+  height: 96px;
+  border-radius: 16px;
+}
+
+.admin-item-content {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-item-content strong {
+  color: var(--text-h);
+}
+
+.admin-item-content span,
+.admin-item-content p {
+  color: var(--text);
+}
+
+.admin-item-content p {
+  margin: 0;
+}
+
+.admin-item-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-item-actions button {
+  padding: 0.7rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text-h);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-item-actions button:hover,
+.admin-item-actions button:focus-visible,
+.auth-tab:hover,
+.auth-tab:focus-visible {
+  transform: translateY(-1px);
 }
 
 @media (max-width: 1024px) {
@@ -383,6 +602,13 @@ main {
 
   .contact-actions {
     justify-content: flex-start;
+  }
+
+  .auth-layout,
+  .admin-layout,
+  .section-heading-row {
+    grid-template-columns: 1fr;
+    display: grid;
   }
 }
 
@@ -425,5 +651,19 @@ main {
 
   .panel-grid {
     grid-template-columns: 1fr;
+  }
+
+  .form-grid,
+  .admin-item {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-submit,
+  .admin-actions .button {
+    width: 100%;
+  }
+
+  .admin-item-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
