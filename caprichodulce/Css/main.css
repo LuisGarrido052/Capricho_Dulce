@@ -83,7 +83,8 @@ body {
 /* ─────────────────────────────────────────────────────────────── */
 
 .site-header {
-    background: linear-gradient(90deg, rgba(150, 36, 8, 0.801), rgba(244, 162, 97, 0.05));
+    /*background: linear-gradient(90deg, rgb(150, 36, 8), rgb(244, 163, 97));*/
+    background: #f0c2b6;
     border-bottom: 3px solid var(--primary);
     padding: var(--spacing-lg) var(--spacing-xl);
     display: flex;
