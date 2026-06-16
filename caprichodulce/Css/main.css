@@ -83,7 +83,7 @@ body {
 /* ─────────────────────────────────────────────────────────────── */
 
 .site-header {
-    background: linear-gradient(90deg, rgba(231, 111, 81, 0.1), rgba(244, 162, 97, 0.05));
+    background: linear-gradient(90deg, rgba(150, 36, 8, 0.801), rgba(244, 162, 97, 0.05));
     border-bottom: 3px solid var(--primary);
     padding: var(--spacing-lg) var(--spacing-xl);
     display: flex;
@@ -91,7 +91,7 @@ body {
     align-items: center;
     gap: var(--spacing-xl);
     flex-wrap: wrap;
-    box-shadow: var(--shadow-md);
+    /*box-shadow: var(--shadow-md);*/
     position: sticky;
     top: 0;
     z-index: 100;
