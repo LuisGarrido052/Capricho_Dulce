@@ -3,12 +3,9 @@ export default function HomePage({ session, products, onNavigate }) {
     <section className="page page-home">
       <div className="hero-grid">
         <div className="hero-copy card-surface">
-          <p className="eyebrow">Experiencia separada</p>
-          <h1>Inicio, login, registro y cuenta en pantallas distintas.</h1>
-          <p className="hero-text">
-            La tienda mantiene el catálogo público, pero el acceso y la cuenta
-            quedan en vistas independientes para que el flujo sea claro.
-          </p>
+          <p className="eyebrow">Conoce la experiencia del dulzor.</p>
+          <h1>Brownies, Cupcakes, Galletas, torstas y mucho mas!</h1>
+
 
           {session ? (
             <div className="hero-session card-inline">
@@ -38,15 +35,15 @@ export default function HomePage({ session, products, onNavigate }) {
           <div className="route-stack">
             <button className="route-card" onClick={() => onNavigate('login')} type="button">
               <strong>Ingresar</strong>
-              <span>Solo la pantalla de autenticación.</span>
+              <span>Ingresa a endulzar tu vida.</span>
             </button>
             <button className="route-card" onClick={() => onNavigate('register')} type="button">
               <strong>Registro</strong>
-              <span>Formulario independiente para crear cuenta.</span>
+              <span>Crea tu cuenta, y disfruta de descuentos exclusivos!.</span>
             </button>
             <button className="route-card" onClick={() => onNavigate('account')} type="button">
               <strong>Mi cuenta</strong>
-              <span>Resumen de la sesión reconocida.</span>
+              <span>Ve tu perfil.</span>
             </button>
           </div>
         </aside>
@@ -57,7 +54,7 @@ export default function HomePage({ session, products, onNavigate }) {
           <p className="eyebrow">Catálogo visible</p>
           <h2>Productos destacados</h2>
         </div>
-        <span className="section-note">Este bloque es público y no mezcla la navegación de cuenta.</span>
+        <span className="section-note">Endulza tu momento </span>
       </div>
 
       <div className="product-preview-grid">
